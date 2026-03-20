@@ -1,0 +1,13 @@
+{
+  "team_name": "Initial Team Setup",
+  "agents": [
+    {
+      "slug": "adp-orchestrator",
+      "path": "fixed/adp-orchestrator"
+    },
+    {
+      "slug": "adp-headhunter",
+      "path": "operational/initialization/adp-headhunter"
+    }
+  ]
+}

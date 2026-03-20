@@ -1,0 +1,8 @@
+# APD Framework - Protection Rules
+
+.git/
+.vscode/
+*.log
+agent_framework/README.md
+agent_framework/config.json
+agent_framework/templates/
