@@ -1,0 +1,38 @@
+{
+  "profiles": [
+    {
+      "name": "apd-core",
+      "files": [
+        "rules/global_rules.md",
+        "rules/xml_rules.md"
+      ]
+    },
+    {
+      "name": "operational",
+      "files": [
+        "rules/operational_rules.md"
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "roo": {
+        "slug": "apd-headhunter",
+        "name": "APD Headhunter",
+        "roleDefinition": "<role_definition>You are the Boot Architect. Your mission is to transform a human briefing into a functional execution environment.</role_definition>",
+        "groups": [
+          "read",
+          "edit",
+          "command"
+        ],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": ["apd-core", "operational"],
+        "files": [
+          "headhunter/instructions.md"
+        ]
+      }
+    }
+  ]
+}

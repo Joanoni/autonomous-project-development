@@ -7,9 +7,9 @@ APD is a multi-agent AI orchestration framework that automates software developm
 ## Key Features
 
 - **Fully autonomous pipeline** — agents hand off work to each other without human prompting; the human only intervenes when a decision or review is needed.
-- **Filesystem-based messaging** — no external infrastructure required; agents communicate by writing `.md` files to each other's `inbox/` folders.
-- **Hierarchical rules system** — agent behavior is composed from layered rule files (global → operational → domain → agent-specific), making it easy to extend or customize.
-- **Team-based provisioning** — the environment (Roo modes, rules, inboxes) is dynamically built from a team definition, so the agent roster and workflow can be swapped without touching agent code.
+- **Filesystem-based messaging** — no external infrastructure required; agents communicate by writing `.md` files to the shared `inbox/` folder.
+- **Profiles-based rules system** — agent behavior is composed from named profiles declared in `agents.json`, making it easy to extend or customize without touching agent code.
+- **Dynamic team provisioning** — the Headhunter agent designs and writes the team roster (`agents.json`) at runtime; `cycle/main.py` picks up changes automatically on the next Orchestrator loop.
 - **Full audit trail** — every message ever sent between agents is preserved in `read/` folders.
 - **Self-contained projects** — each generated project carries its own agent infrastructure; no dependency on the APD repository at runtime.
 
@@ -27,7 +27,7 @@ cd autonomous-project-development
 ### 2. Create a new project
 
 ```bash
-python new_project.py
+python scripts/new_project/main.py
 ```
 
 Follow the prompts to set a destination folder and project name (or provide a Git SSH URL for a remote project).
@@ -42,7 +42,7 @@ Roo will detect `.roomodes` and load the APD agent modes automatically.
 
 ### 4. Write a briefing and start the cycle
 
-1. Create `agent_framework/inbox/unread/message.md` with the front-matter `from: user`, `to: apd-headhunter`, `subject: Project Briefing` followed by your project description.
+1. Copy `agent_framework/templates/project_briefing/template.md` to `agent_framework/inbox/unread/message.md` and fill in your project description, tech stack, and success criteria.
 2. Switch to **APD Orchestrator** mode in Roo and type `Start`.
 3. The agents take it from there.
 
@@ -54,14 +54,18 @@ See [`docs/how-to-use.md`](docs/how-to-use.md) for the full step-by-step guide.
 
 ```
 APD Repository
-├── new_project.py          ← entry point: creates new projects
+├── scripts/
+│   └── new_project/        ← entry point: creates new projects
 └── skeleton/               ← template copied into every project
     ├── agent_framework/
-    │   ├── registry/       ← agent blueprints, team definitions, internal templates
-    │   ├── scripts/        ← provisioner (scout + assembler) + utilities
-    │   ├── inbox/          ← filesystem message bus (global draft/unread/read)
-    │   └── memory/         ← persistent technical state (tech_stack, decisions)
-    └── src/                ← application code 
+    │   ├── registry/
+    │   │   ├── internal/   ← orchestrator blueprint + cycle script
+    │   │   ├── project/    ← headhunter blueprint + operational rules
+    │   │   └── examples/   ← example teams for Headhunter reference
+    │   ├── inbox/          ← filesystem message bus (draft/unread/read)
+    │   ├── memory/         ← persistent technical state (decisions)
+    │   └── templates/      ← user-facing document templates
+    └── src/                ← application code
 ```
 
 ---
@@ -87,5 +91,5 @@ Full documentation is in [`docs/`](docs/):
 | [`architecture.md`](docs/architecture.md) | System design, runtime environment, rules hierarchy |
 | [`agents.md`](docs/agents.md) | All agents: roles, domains, inputs, outputs, behavioral rules |
 | [`scripts.md`](docs/scripts.md) | All scripts: purpose, inputs, outputs, side effects |
-| [`teams.md`](docs/teams.md) | Team system, built-in teams, how to create a custom team |
+| [`teams.md`](docs/teams.md) | Team system, built-in examples, how to create a custom team |
 | [`how-to-use.md`](docs/how-to-use.md) | Step-by-step usage guide |

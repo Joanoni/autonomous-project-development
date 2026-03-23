@@ -1,0 +1,71 @@
+{
+    "profiles": [
+        {
+            "name": "apd-core",
+            "files": [
+                "rules/global_rules.md",
+                "rules/xml_rules.md"
+            ]
+        },
+        {
+            "name": "operational",
+            "files": [
+                "rules/operational_rules.md"
+            ]
+        },
+        {
+            "name": "simple-team",
+            "files": [
+                "rules/team_instructions.md"
+            ]
+        }
+    ],
+    "agents": [
+        {
+            "roo": {
+                "slug": "apd-coder",
+                "name": "APD Coder",
+                "roleDefinition": "<role_definition>You are a Senior Software Engineer. You implement features and fix bugs based on the provided technical stack.</role_definition>",
+                "groups": [
+                    "read",
+                    "edit",
+                    "command"
+                ],
+                "customInstructions": ""
+            },
+            "apd": {
+                "profiles": [
+                    "apd-core",
+                    "operational",
+                    "simple-team"
+                ],
+                "files": [
+                    "coder/instructions.md"
+                ]
+            }
+        },
+        {
+            "roo": {
+                "slug": "apd-tester",
+                "name": "APD Tester",
+                "roleDefinition": "<role_definition>You are a QA Engineer. Your goal is to ensure the implementation meets the success criteria and is bug-free.</role_definition>",
+                "groups": [
+                    "read",
+                    "edit",
+                    "command"
+                ],
+                "customInstructions": ""
+            },
+            "apd": {
+                "profiles": [
+                    "apd-core",
+                    "operational",
+                    "simple-team"
+                ],
+                "files": [
+                    "tester/instructions.md"
+                ]
+            }
+        }
+    ]
+}

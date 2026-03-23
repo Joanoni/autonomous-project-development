@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import shutil
-import subprocess
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -20,48 +20,17 @@ def load_config() -> dict:
             pass
     return {}
 
-def run(cmd: list[str], cwd: Path) -> None:
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
-    if result.stdout:
-        print(result.stdout.rstrip())
-    if result.returncode != 0:
-        raise RuntimeError(f"Command error: {' '.join(cmd)}\n{result.stderr}")
-
-def framework_extra_steps(root: Path, chosen_team: str) -> None:
-    print("[4/4] Executing framework provisioner...")
-
-    # Write chosen_team into the provisioner input before running
-    provisioner_input = root / "agent_framework/scripts/provisioner/input.json"
-    provisioner_input.write_text(json.dumps({"chosen_team": chosen_team}, indent=2), encoding="utf-8")
-
-    # Using sys.executable ensures we use the same Python environment running this script
-    provisioner_cmd = [sys.executable, "agent_framework/scripts/provisioner/main.py"]
-    
-    try:
-        print("  → Running Provisioner...")
-        run(provisioner_cmd, cwd=root)
-    except RuntimeError as e:
-        print(f"ERROR executing framework provisioner script:\n{e}")
-        sys.exit(1)
-
 def main() -> None:
-    print("=== APD Project Initializer (v1.0.0) ===")
+    print("=== APD Project Initializer (v2.0.0) ===")
     
     config = load_config()
     default_dest = config.get("default_destination", "").strip()
-    default_team = config.get("default_team", "").strip()
 
     if default_dest:
         dest_input = input(f"Destination folder (full path) [{default_dest}]: ").strip()
         dest = dest_input if dest_input else default_dest
     else:
         dest = input("Destination folder (full path): ").strip()
-
-    if default_team:
-        team_input = input(f"Team to provision [{default_team}]: ").strip()
-        chosen_team = team_input if team_input else default_team
-    else:
-        chosen_team = input("Team to provision: ").strip()
     
     dest_path = Path(dest).expanduser().resolve()
     dest_path.mkdir(parents=True, exist_ok=True)
@@ -84,46 +53,53 @@ def main() -> None:
             
         root = dest_path / project_name
         
-        print(f"\n[1/4] Cloning remote repository into: {root}")
-        try:
-            run(["git", "clone", git_url, str(root)], cwd=dest_path)
-        except RuntimeError as e:
-            print(f"ERROR cloning repository:\n{e}")
+        print(f"\n[1/3] Cloning remote repository into: {root}")
+        result = subprocess.run(["git", "clone", git_url, str(root)], cwd=dest_path, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"ERROR cloning repository:\n{result.stderr}")
             sys.exit(1)
     else:
         project_type = "local"
         project_name = input("Project name: ").strip()
         root = dest_path / project_name
         
-        print(f"\n[1/4] Creating local directory: {root}")
+        print(f"\n[1/3] Creating local directory: {root}")
         root.mkdir(parents=True, exist_ok=True)
     
-    # Step 2: Copy Framework
-    print("[2/4] Copying framework skeleton...")
+    # Step 2: Copy Framework Skeleton
+    print("[2/3] Copying framework skeleton...")
     if SKELETON_DIR.exists():
-        # Copy recursively, injecting the skeleton files into the directory
         shutil.copytree(SKELETON_DIR, root, dirs_exist_ok=True)
     else:
         print(f"ERROR: Skeleton folder not found at {SKELETON_DIR}")
         sys.exit(1)
 
-    # Step 3: Final Configuration
-    print("[3/4] Generating config.json...")
+    # Step 3: Generate config.json
+    print("[3/3] Generating config.json...")
     agent_framework_dir = root / "agent_framework"
     agent_framework_dir.mkdir(exist_ok=True)
     
     config_out = {
         "project_name": project_name,
         "framework_name": "APD",
-        "framework_version": "1.0.0",
+        "framework_version": "2.0.0",
         "project_type": project_type
     }
     (agent_framework_dir / "config.json").write_text(json.dumps(config_out, indent=2))
     
-    # Step 4: Provisioning
-    framework_extra_steps(root, chosen_team)
+    # Step 4: Run cycle/main.py to generate initial agent files in the new project
+    cycle_script = root / "agent_framework/registry/internal/workspace/scripts/internal/cycle/main.py"
+    print("[4/4] Running cycle script to generate initial agent files...")
+    result = subprocess.run([sys.executable, str(cycle_script)], cwd=str(root))
+    if result.returncode != 0:
+        print("WARNING: cycle/main.py exited with a non-zero status.")
     
     print(f"\n✅ APD successfully initialized at: {root}")
+    print("   Open the project in VS Code, switch to APD Orchestrator mode, and type 'Start'.")
+
+    # Step 5: Open the new project in VS Code
+    print(f"\n[5/5] Opening project in VS Code: {root}")
+    subprocess.run(["code", str(root)], shell=True)
 
 if __name__ == "__main__":
     main()

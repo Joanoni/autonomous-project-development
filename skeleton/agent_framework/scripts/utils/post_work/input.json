@@ -1,3 +1,0 @@
-{
-  "_note": "This file is no longer used. post_work/main.py reads sender and recipient directly from agent_framework/inbox/draft/message.md metadata."
-}
