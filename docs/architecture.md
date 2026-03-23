@@ -13,14 +13,13 @@ The core problem APD solves: AI coding assistants are powerful but require const
 ```mermaid
 graph TD
     subgraph APD_Repo["APD Repository (this repo)"]
-        NP["new_project.py"]
+        NP["scripts/new_project/main.py"]
         SK["skeleton/"]
     end
 
     subgraph Generated_Project["Generated Project (any directory)"]
         subgraph AF["agent_framework/"]
-            REG["registry/<br/>(blueprints)"]
-            SCR["scripts/<br/>(provisioner + utils)"]
+            REG["registry/<br/>(internal + project + examples)"]
             INB["inbox/<br/>(message bus)"]
             MEM["memory/<br/>(persistent state)"]
         end
@@ -29,37 +28,38 @@ graph TD
         ROO[".roo/rules-*/"]
     end
 
-    NP -->|"copies skeleton + runs scout + assembler"| Generated_Project
-    REG -->|"scout + assembler read"| ROOMODES
-    REG -->|"scout + assembler read"| ROO
-    REG -->|"assembler initializes"| INB
-    REG -->|"assembler initializes"| MEM
+    NP -->|"copies skeleton + runs cycle/main.py"| Generated_Project
+    REG -->|"cycle/main.py merges & syncs"| ROOMODES
+    REG -->|"cycle/main.py merges & syncs"| ROO
+    REG -->|"workspace sync initializes"| INB
+    REG -->|"workspace sync initializes"| MEM
 ```
 
 ---
 
 ## Two Layers
 
-### Layer 1 — Initializer (`new_project.py`)
+### Layer 1 — Initializer (`scripts/new_project/main.py`)
 
-The root [`new_project.py`](../../new_project.py) is the **entry point** for creating a new APD-managed project. It:
+The [`scripts/new_project/main.py`](../scripts/new_project/main.py) script is the **entry point** for creating a new APD-managed project. It:
 
 1. Asks for a destination folder and project name (or a Git repository URL for remote projects).
-2. Copies the entire [`skeleton/`](../../skeleton/) directory into the new project root.
+2. Copies the entire [`skeleton/`](../skeleton/) directory into the new project root.
 3. Generates `agent_framework/config.json` with project metadata.
-4. Immediately runs the provisioner scripts ([`scout`](../../skeleton/agent_framework/scripts/provisioner/scout/main.py) → [`assembler`](../../skeleton/agent_framework/scripts/provisioner/assembler/main.py)) to bootstrap the runtime environment.
+4. Runs [`cycle/main.py`](../skeleton/agent_framework/registry/internal/workspace/scripts/internal/cycle/main.py) to bootstrap the initial runtime environment (`.roomodes`, `.roo/rules-*/`, workspace files).
 
 After this step, the generated project is fully self-contained and ready to be opened in VS Code with Roo.
 
 ### Layer 2 — Skeleton (`skeleton/`)
 
-The [`skeleton/`](../../skeleton/) directory is the **template** for every APD project. It contains:
+The [`skeleton/`](../skeleton/) directory is the **template** for every APD project. It contains:
 
 | Path | Purpose |
 |---|---|
-| `agent_framework/registry/` | Agent blueprints, team definitions, internal templates |
-| `agent_framework/scripts/` | Provisioner and utility Python scripts |
-| `agent_framework/inbox/` | Filesystem message bus (created/reset by assembler) |
+| `agent_framework/registry/internal/` | Orchestrator blueprint, global rules, and the `cycle/main.py` script |
+| `agent_framework/registry/project/` | Headhunter blueprint, operational rules, and project workspace defaults |
+| `agent_framework/registry/examples/` | Example teams the Headhunter can reference when designing a new team |
+| `agent_framework/inbox/` | Filesystem message bus (created/reset by workspace sync) |
 | `agent_framework/memory/` | Persistent technical state shared across agents |
 | `agent_framework/templates/` | User-facing document templates (e.g., project briefing template) |
 | `src/` | Application source code |
@@ -68,16 +68,16 @@ The [`skeleton/`](../../skeleton/) directory is the **template** for every APD p
 
 ## Runtime Environment
 
-The assembler generates the following runtime artifacts in the project root:
+`cycle/main.py` generates and maintains the following runtime artifacts in the project root:
 
 ### `.roomodes`
-A JSON file consumed by the Roo VS Code extension. It defines all **custom agent modes** for the project — one entry per agent in the chosen team. Each mode entry contains the agent's slug, name, role definition, and a pointer to its rules directory.
+A JSON file consumed by the Roo VS Code extension. It defines all **custom agent modes** for the project — one entry per agent in the merged roster. Each mode entry contains the agent's slug, name, role definition, and groups.
 
 ### `.roo/rules-{slug}/`
-Per-agent rule directories. Each directory contains the **flattened, slot-filled Markdown rule files** that Roo injects as system context for that agent. The assembler builds these by traversing the hierarchical rules inheritance chain (see below).
+Per-agent rule directories. Each directory contains the **flattened Markdown rule files** that Roo injects as system context for that agent. `cycle/main.py` builds these by resolving each agent's profile list and copying the referenced files.
 
 ### `agent_framework/inbox/`
-The **asynchronous message bus**. A single global inbox replaces the old per-agent folder structure. Agents write outgoing messages to `draft/`, and `post_work` validates and promotes them through the pipeline.
+The **asynchronous message bus**. A single global inbox. Agents write outgoing messages to `draft/`, and `post_work` validates and promotes them through the pipeline.
 
 ```
 agent_framework/inbox/
@@ -93,7 +93,6 @@ Persistent files shared across all agents:
 
 | File | Purpose |
 |---|---|
-| `tech_stack.md` | Canonical record of the project's technology choices |
 | `decisions.md` | Log of significant architectural and design decisions |
 
 ---
@@ -108,45 +107,48 @@ APD uses the filesystem — not API calls, shared memory, or message queues — 
 - **Decoupling**: agents never call each other directly; the Orchestrator mediates all routing.
 
 The flow is:
-1. An agent writes `message.md` (and any attachments) to `agent_framework/inbox/draft/`. The metadata front-matter must include `from`, `to`, and `subject`.
+1. An agent writes `message.md` (and any attachments) to `agent_framework/inbox/draft/`. The metadata block must include `from`, `to`, and `subject`.
 2. The agent runs `post_work/main.py`, which validates the draft, archives the current `unread/` contents into a timestamped folder inside `read/`, and promotes `draft/` contents to `unread/`.
-3. The agent outputs `Done` — signaling the Orchestrator to re-scan the queue.
-4. The Orchestrator runs `scan_inbox/main.py`, which reads the `to` field from `unread/message.md` and returns the recipient's slug.
+3. The agent outputs `Done` — signaling the Orchestrator to re-run the cycle.
+4. The Orchestrator runs `cycle/main.py`, which (among other things) reads the `to` field from `unread/message.md` and returns the recipient's slug.
 5. The Orchestrator invokes the recipient agent via Roo's `new_task` tool.
 
 ---
 
-## Hierarchical Rules System
+## Profiles-Based Rules System
 
-Agent behavior is defined by layered Markdown rule files. The assembler traverses the registry hierarchy and **flattens all applicable rules** into each agent's `.roo/rules-{slug}/` directory.
+Agent behavior is defined by named **profiles** declared in each `agents.json` file. `cycle/main.py` resolves each agent's profile list and flattens all referenced Markdown files into the agent's `.roo/rules-{slug}/` directory.
 
-The framework is fully customizable — you can add new operational agents under any domain group. The diagram below shows the built-in structure; custom agents follow the same pattern.
+There are two `agents.json` sources that are merged on every cycle:
+
+| Source | Path | Contents |
+|---|---|---|
+| **Internal** | `registry/internal/agents/agents.json` | Fixed agents (Orchestrator). Profiles: `apd-core` (global + XML rules). |
+| **Project** | `registry/project/agents/agents.json` | Project agents (Headhunter + operational team). Profiles: `apd-core`, `operational`, team-specific. |
+
+The Headhunter writes the project `agents.json` at runtime when provisioning a new team. `cycle/main.py` detects the change and rebuilds `.roomodes` and `.roo/rules-{slug}/` automatically.
 
 ```mermaid
 graph TD
-    G["agents/common/<br/>(global rules — all agents)"]
-    FX["agents/fixed/common/<br/>(fixed agent rules)"]
-    OP["agents/operational/common/<br/>(operational agent rules)"]
-    DOM["agents/operational/{domain}/common/<br/>(domain-shared rules)"]
-    INIT["agents/operational/initialization/common/<br/>(init domain rules)"]
-    AA["agents/operational/{domain}/agent-a/<br/>(agent-a-specific rules)"]
-    AB["agents/operational/{domain}/agent-b/<br/>(agent-b-specific rules)"]
-    HH["agents/operational/initialization/adp-headhunter/<br/>(headhunter-specific rules)"]
-    OR["agents/fixed/adp-orchestrator/<br/>(orchestrator-specific rules)"]
+    INT["registry/internal/agents/agents.json<br/>(orchestrator)"]
+    PRJ["registry/project/agents/agents.json<br/>(headhunter + team agents)"]
+    CY["cycle/main.py"]
+    RM[".roomodes"]
+    RR[".roo/rules-{slug}/"]
 
-    G --> FX
-    G --> OP
-    FX --> OR
-    OP --> DOM
-    OP --> INIT
-    DOM --> AA
-    DOM --> AB
-    INIT --> HH
+    INT --> CY
+    PRJ --> CY
+    CY --> RM
+    CY --> RR
 ```
 
-Each level adds more specific constraints. An agent's effective ruleset is the union of all rules from the root of the hierarchy down to its specific folder, plus the team's `workflow.md`. This means:
+**Profile resolution per agent:**
+1. For each profile name listed in the agent's `apd.profiles` array, copy the files listed under that profile in the same `agents.json`.
+2. Copy the agent's own `apd.files` entries.
+3. All files are resolved relative to the `agents.json` directory.
 
-- Global rules (autonomy, file integrity) apply to **every** agent.
-- Operational rules (Done protocol, post-work, handoff) apply to all **non-orchestrator** agents.
-- Domain rules apply only to agents within that domain group.
-- Agent-specific instructions define the precise execution pipeline for each role.
+This means:
+- Global rules (`apd-core` profile) apply to **every** agent.
+- Operational rules (`operational` profile) apply to all non-orchestrator agents.
+- Team-specific rules (custom profile) apply only to agents in that team.
+- Agent-specific instruction files define the precise execution pipeline for each role.

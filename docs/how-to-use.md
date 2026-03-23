@@ -21,7 +21,7 @@ This guide walks you through creating a new APD-managed project and running the 
 From the APD repository root, run:
 
 ```bash
-python new_project.py
+python scripts/new_project/main.py
 ```
 
 You will be prompted for:
@@ -34,12 +34,12 @@ You will be prompted for:
 
 The script will:
 - Copy the APD skeleton into the new project directory.
-- Generate `.apd/config.json` with project metadata.
-- Run the provisioner pipeline (Scout + Assembler) to bootstrap the initial environment.
+- Generate `agent_framework/config.json` with project metadata.
+- Run `cycle/main.py` to generate the initial agent files (`.roomodes`, `.roo/rules-*/`, workspace files).
 
 **Example output:**
 ```
-=== APD Project Initializer (v1.0.0) ===
+=== APD Project Initializer (v2.0.0) ===
 Destination folder (full path): C:/Projects
 Is the project local or remote?
 [1] Local
@@ -47,12 +47,14 @@ Is the project local or remote?
 Choice (1/2): 1
 Project name: my-api
 
-[1/4] Creating local directory: C:/Projects/my-api
-[2/4] Copying framework skeleton...
-[3/4] Generating config.json...
-[4/4] Executing framework extra steps (Scout & Assembler)...
+[1/5] Creating local directory: C:/Projects/my-api
+[2/5] Copying framework skeleton...
+[3/5] Generating config.json...
+[4/5] Running cycle script to generate initial agent files...
 
 ✅ APD successfully initialized at: C:/Projects/my-api
+
+[5/5] Opening project in VS Code: C:/Projects/my-api
 ```
 
 ---
@@ -75,23 +77,13 @@ Roo will automatically detect the `.roomodes` file and load the custom agent mod
 
 Before starting the autonomous cycle, you need to give the Headhunter its initial instructions.
 
-1. Use the template at `agent_framework/templates/team_briefing/template.md` as a starting point.
-2. Create `agent_framework/inbox/unread/message.md` using the `<message_metadata>` block format followed by your briefing content:
-
-```
-<message_metadata>
-from: user
-to: apd-headhunter
-subject: Project Briefing
-</message_metadata>
-
-Your briefing content here...
-```
+1. Copy `agent_framework/templates/project_briefing/template.md` to `agent_framework/inbox/unread/message.md`.
+2. Fill in the template with your project description, tech stack, and success criteria.
 
 **Tips for a good briefing:**
 - Be specific about the tech stack and constraints.
 - Define clear, testable success criteria.
-- Keep it focused — the Headhunter will handle team selection and environment setup.
+- Keep it focused — the Headhunter will handle team design and environment setup.
 
 ---
 
@@ -104,18 +96,18 @@ Start
 ```
 
 That's it. The Orchestrator will begin its loop:
-1. Scan the inbox queue.
-2. Detect the message in the Headhunter's inbox.
+1. Run `cycle/main.py` — sync the environment and scan the inbox.
+2. Detect the message addressed to the Headhunter.
 3. Invoke the Headhunter.
 
 The Headhunter will then:
 1. Read your briefing.
-2. Select the appropriate team.
-3. Run Scout and Assembler to provision the full environment.
+2. Design the appropriate team.
+3. Write agent instructions and `agents.json` to provision the full environment.
 4. Write a task briefing to the first agent's inbox.
 5. Output `Done`.
 
-The Orchestrator resumes, detects the next agent's message, invokes it, and the cycle continues autonomously.
+The Orchestrator resumes, `cycle/main.py` picks up the new `agents.json` and rebuilds the Roo environment, detects the next agent's message, invokes it, and the cycle continues autonomously.
 
 ---
 
@@ -124,15 +116,15 @@ The Orchestrator resumes, detects the next agent's message, invokes it, and the 
 Once started, the system runs without human intervention. The core flow is:
 
 ```
-Orchestrator scans → Headhunter inbox has message
-  → Headhunter provisions environment, writes to next agent's inbox → Done
-Orchestrator scans → agent inbox has message
+Orchestrator runs cycle → Headhunter inbox has message
+  → Headhunter designs team, writes agents.json, writes to next agent's inbox → Done
+Orchestrator runs cycle → rebuilds .roomodes + .roo/rules-*/ → agent inbox has message
   → Agent does its work, writes to next agent's inbox → Done
-Orchestrator scans → ... (cycle continues per team workflow)
-Orchestrator scans → user inbox has message → PAUSE
+Orchestrator runs cycle → ... (cycle continues per team routing table)
+Orchestrator runs cycle → user inbox has message → PAUSE
 ```
 
-The exact agents involved and the routing between them depend on the team that was provisioned. Each team defines its own workflow.
+The exact agents involved and the routing between them depend on the team that was provisioned. Each team defines its own routing table in `agent_framework/registry/project/agents/rules/team_instructions.md`.
 
 **You do not need to do anything** during this cycle. The agents handle implementation, testing, and bug-fixing autonomously.
 
@@ -140,7 +132,7 @@ The exact agents involved and the routing between them depend on the team that w
 
 ## Step 6: Human Intervention
 
-The Orchestrator pauses and notifies you when `scan_inbox` returns `user` — meaning `agent_framework/inbox/unread/message.md` has `to: user`. This happens when:
+The Orchestrator pauses and notifies you when `cycle/main.py` returns `user` — meaning `agent_framework/inbox/unread/message.md` has `to: user`. This happens when:
 
 - An agent has completed its work and the result is ready for your review.
 - An agent needs input it cannot determine autonomously (e.g., a major architectural decision).
@@ -149,7 +141,7 @@ The Orchestrator pauses and notifies you when `scan_inbox` returns `user` — me
 **To respond:**
 1. Read the message in `agent_framework/inbox/unread/message.md`.
 2. Take whatever action is needed (review the output, make a decision, etc.).
-3. If the cycle should continue, write your reply to `agent_framework/inbox/unread/message.md` (replacing it) with the appropriate `to:` field pointing to the next agent, or write a new `message.md` to `agent_framework/inbox/draft/` and run `post_work` manually.
+3. If the cycle should continue, write your reply to `agent_framework/inbox/draft/message.md` with the appropriate `to:` field pointing to the next agent, then run `python agent_framework/scripts/user/post_work/main.py` manually.
 4. Type `Start` in the Orchestrator again to resume the cycle.
 
 ---
@@ -160,20 +152,17 @@ The Orchestrator pauses and notifies you when `scan_inbox` returns `user` — me
 All processed messages are preserved in `agent_framework/inbox/read/`. Each entry is a timestamped subfolder named `{YYYYMMDD_HHMMSS}_{from}_{to}/` containing the archived `message.md` and any attachments.
 
 ### Checking Technical State
-- `agent_framework/memory/tech_stack.md` — the canonical record of the project's technology choices.
+- `agent_framework/memory/tech_stack.md` — the canonical record of the project's technology choices (available when using the `simple_code_project` example team or any team that includes it).
 - `agent_framework/memory/decisions.md` — a log of significant architectural decisions made during the project.
 
 ### Re-provisioning the Environment
-If you need to change the team or reset the environment, you can manually trigger the provisioner:
-1. Set `chosen_team` in `agent_framework/scripts/provisioner/scout/input.json`.
-2. Run `python agent_framework/scripts/provisioner/scout/main.py` from the project root.
-3. Fill in the slots in `agent_framework/scripts/provisioner/assembler/input.json`.
-4. Run `python agent_framework/scripts/provisioner/assembler/main.py` from the project root.
+If you need to change the team or reset the environment, update `agent_framework/registry/project/agents/agents.json` with the new roster. On the next Orchestrator loop, `cycle/main.py` will automatically detect the change and rebuild `.roomodes` and `.roo/rules-{slug}/` for the new team.
 
-> **Warning:** The assembler performs a full wipe of `.roo/`, `.roomodes`, `inbox/`, and `memory/`. Any message currently in `inbox/unread/` will be lost.
+> **Warning:** Removing an agent from `agents.json` will delete its `.roo/rules-{slug}/` directory on the next cycle. Any message currently in `inbox/unread/` addressed to that agent will be orphaned.
 
 ### Debugging Agent Behavior
 If an agent behaves unexpectedly, check:
 - The agent's rules in `.roo/rules-{slug}/` — these are the actual instructions Roo is using.
 - The message history in `agent_framework/inbox/read/` — each archived folder contains the message that was processed.
 - The `agent_framework/memory/decisions.md` for any logged decisions.
+- The `agent_framework/registry/project/agents/agents.json` — verify the agent roster and profile assignments are correct.
