@@ -111,7 +111,7 @@ Fill in all three fields before running:
 **Location (in generated project):** `agent_framework/scripts/internal/cycle/main.py`
 
 **Purpose:** The core runtime script. Runs every time the Orchestrator starts its loop. Performs five steps in order:
-1. **Merge agents** — loads `registry/internal/agents/agents.json` and `registry/project/agents/agents.json`, checks for slug conflicts, and produces a merged agent roster.
+1. **Merge agents** — loads `registry/shared/agents/agents.json`, `registry/internal/agents/agents.json`, and `registry/project/agents/agents.json`, checks for slug conflicts between internal and project agents, and produces a merged agent roster.
 2. **Sync workspace** — copies files from `registry/internal/workspace/` and `registry/project/workspace/` into `agent_framework/`, keeping the newer version of any file that already exists.
 3. **Sync Roo environment** — rebuilds `.roomodes` and `.roo/rules-{slug}/` from the merged agent definitions. Only updates entries that have changed (compares mtimes and mode entries).
 4. **Promote messages** — if `inbox/draft/` has content: archives the current `inbox/unread/` contents into a timestamped folder inside `inbox/read/` (skipped if `unread/` contains only a `.gitkeep`), then moves all files from `draft/` into `unread/`.
@@ -142,9 +142,9 @@ Fill in all three fields before running:
 
 ### `post_work/main.py`
 
-**Location (registry source):** [`skeleton/agent_framework/registry/project/workspace/scripts/user/post_work/main.py`](../skeleton/agent_framework/registry/project/workspace/scripts/user/post_work/main.py)
+**Location (registry source):** [`skeleton/agent_framework/registry/shared/workspace/scripts/shared/post_work/main.py`](../skeleton/agent_framework/registry/shared/workspace/scripts/shared/post_work/main.py)
 
-**Location (in generated project):** `agent_framework/scripts/user/post_work/main.py`
+**Location (in generated project):** `agent_framework/scripts/shared/post_work/main.py`
 
 **Purpose:** Validates the outgoing draft message. Every operational agent must run this before outputting `Done`. The actual message promotion (archiving `unread/` and moving `draft/` → `unread/`) is handled automatically by `cycle/main.py` at the start of the next loop iteration.
 
@@ -189,7 +189,7 @@ sequenceDiagram
 
     loop Orchestrator Loop
         OR->>CY: python agent_framework/scripts/internal/cycle/main.py
-        Note over CY: 1. Merge agents.json (internal + project)
+        Note over CY: 1. Merge agents.json (shared + internal + project)
         Note over CY: 2. Sync workspace files
         Note over CY: 3. Sync .roomodes + .roo/rules-{slug}/
         Note over CY: 4. Archive unread→read/, promote draft→unread/

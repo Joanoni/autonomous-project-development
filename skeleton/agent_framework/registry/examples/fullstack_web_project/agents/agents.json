@@ -1,20 +1,8 @@
 {
   "profiles": [
     {
-      "name": "apd-core",
-      "files": [
-        "rules/global_rules.md",
-        "rules/xml_rules.md"
-      ]
-    },
-    {
-      "name": "operational",
-      "files": [
-        "rules/operational_rules.md"
-      ]
-    },
-    {
       "name": "fullstack-team",
+      "source": "project",
       "files": [
         "rules/team_instructions.md"
       ]
@@ -30,7 +18,11 @@
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "fullstack-team", "source": "project" }
+        ],
         "files": ["architect/instructions.md"]
       }
     },
@@ -43,7 +35,11 @@
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "fullstack-team", "source": "project" }
+        ],
         "files": ["backend-dev/instructions.md"]
       }
     },
@@ -56,7 +52,11 @@
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "fullstack-team", "source": "project" }
+        ],
         "files": ["backend-tester/instructions.md"]
       }
     },
@@ -69,7 +69,11 @@
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "fullstack-team", "source": "project" }
+        ],
         "files": ["frontend-dev/instructions.md"]
       }
     },
@@ -82,7 +86,11 @@
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "fullstack-team", "source": "project" }
+        ],
         "files": ["frontend-tester/instructions.md"]
       }
     },
@@ -95,7 +103,11 @@
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "fullstack-team", "source": "project" }
+        ],
         "files": ["user-tester/instructions.md"]
       }
     }

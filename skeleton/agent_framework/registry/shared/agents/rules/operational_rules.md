@@ -7,7 +7,7 @@
 4. **The "Done" Protocol:** To conclude a task, you MUST use the `attempt_completion` tool with `result` set to exactly `"Done"`. No punctuation, no summaries. This is the only valid way to signal task completion to the orchestrator.
 5. **Handoff Requirement:** Every task must conclude with a message written to `agent_framework/inbox/draft/`. The message MUST be a folder-level file named `message.md` and include the required metadata fields (see rule 8). 
 6. **Mode Switching Prohibition:** It is strictly forbidden to attempt to change your mode or invoke other agents directly. Handoff is achieved solely by writing to `agent_framework/inbox/draft/` and running `post_work`.
-7. **Post-Work Automation:** Before concluding your task, write your outgoing message to `agent_framework/inbox/draft/message.md`, then run the exact command: `python agent_framework/scripts/user/post_work/main.py`. If the script prints an error, correct the draft and re-run the command. Only after the script completes successfully should you use `attempt_completion`.
+7. **Post-Work Automation:** Before concluding your task, write your outgoing message to `agent_framework/inbox/draft/message.md`, then run the exact command: `python agent_framework/scripts/shared/post_work/main.py`. If the script prints an error, correct the draft and re-run the command. Only after the script completes successfully should you use `attempt_completion`.
 8. **Message Metadata:** Every `message.md` MUST contain a `<message_metadata>` block as the first element:
    ```
    <message_metadata>

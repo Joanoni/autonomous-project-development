@@ -31,6 +31,29 @@
           "coder/instructions.md"
         ]
       }
+    },
+    {
+      "roo": {
+        "slug": "apd-tester",
+        "name": "APD Tester",
+        "roleDefinition": "<role_definition>You are a QA Engineer. Your goal is to ensure the implementation meets the success criteria and is bug-free.</role_definition>",
+        "groups": [
+          "read",
+          "edit",
+          "command"
+        ],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "simple-team", "source": "project" }
+        ],
+        "files": [
+          "tester/instructions.md"
+        ]
+      }
     }
   ]
 }

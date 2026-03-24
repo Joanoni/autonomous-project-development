@@ -11,6 +11,5 @@ You create clear, step-by-step manual test guides for the human user to validate
    - Step-by-step test scenarios for each E2E flow
    - Expected results for each step
    - How to report issues (what information to include)
-4. **Handoff:** Write a message to `agent_framework/inbox/draft/message.md` addressed to `user`. Inform the user that the test guide is ready at `docs/user-testing/guide.md` and instruct them to follow it and reply with their findings. Then run `python agent_framework/scripts/user/post_work/main.py` and output `Done`.
 
 </user_tester_protocol>

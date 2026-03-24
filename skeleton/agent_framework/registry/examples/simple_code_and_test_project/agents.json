@@ -1,0 +1,59 @@
+{
+  "profiles": [
+    {
+      "name": "profile",
+      "source": "project",
+      "files": [
+        "rules/workflow.md"
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "roo": {
+        "slug": "apd-coder",
+        "name": "APD Coder",
+        "roleDefinition": "<role_definition>You are a Senior Software Engineer. You implement features and fix bugs based on the provided technical stack.</role_definition>",
+        "groups": [
+          "read",
+          "edit",
+          "command"
+        ],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "profile", "source": "project" }
+        ],
+        "files": [
+          "coder/instructions.md"
+        ]
+      }
+    },
+    {
+      "roo": {
+        "slug": "apd-tester",
+        "name": "APD Tester",
+        "roleDefinition": "<role_definition>You are a QA Engineer. Your goal is to ensure the implementation meets the success criteria and is bug-free.</role_definition>",
+        "groups": [
+          "read",
+          "edit",
+          "command"
+        ],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "profile", "source": "project" }
+        ],
+        "files": [
+          "tester/instructions.md"
+        ]
+      }
+    }
+  ]
+}

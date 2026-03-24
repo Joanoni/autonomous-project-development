@@ -119,23 +119,26 @@ The flow is:
 
 Agent behavior is defined by named **profiles** declared in each `agents.json` file. `cycle/main.py` resolves each agent's profile list and flattens all referenced Markdown files into the agent's `.roo/rules-{slug}/` directory.
 
-There are two `agents.json` sources that are merged on every cycle:
+There are three `agents.json` sources that are merged on every cycle:
 
 | Source | Path | Contents |
 |---|---|---|
-| **Internal** | `registry/internal/agents/agents.json` | Fixed agents (Orchestrator). Profiles: `apd-core` (global + XML rules). |
-| **Project** | `registry/project/agents/agents.json` | Project agents (Headhunter + operational team). Profiles: `apd-core`, `operational`, team-specific. |
+| **Shared** | `registry/shared/agents/agents.json` | Shared profiles only — no agents. Defines `apd-core` (global + XML rules) and `operational` (operational rules) profiles available to all agents across all sources. |
+| **Internal** | `registry/internal/agents/agents.json` | Fixed agents (Orchestrator). References shared profiles via `{ "name": "...", "source": "shared" }`. |
+| **Project** | `registry/project/agents/agents.json` | Project agents (Headhunter + operational team). References shared profiles and defines team-specific profiles. |
 
 The Headhunter writes the project `agents.json` at runtime when provisioning a new team. `cycle/main.py` detects the change and rebuilds `.roomodes` and `.roo/rules-{slug}/` automatically.
 
 ```mermaid
 graph TD
+    SH["registry/shared/agents/agents.json<br/>(shared profiles: apd-core, operational)"]
     INT["registry/internal/agents/agents.json<br/>(orchestrator)"]
     PRJ["registry/project/agents/agents.json<br/>(headhunter + team agents)"]
     CY["cycle/main.py"]
     RM[".roomodes"]
     RR[".roo/rules-{slug}/"]
 
+    SH --> CY
     INT --> CY
     PRJ --> CY
     CY --> RM

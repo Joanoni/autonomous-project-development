@@ -1,19 +1,5 @@
 {
-  "profiles": [
-    {
-      "name": "apd-core",
-      "files": [
-        "rules/global_rules.md",
-        "rules/xml_rules.md"
-      ]
-    },
-    {
-      "name": "operational",
-      "files": [
-        "rules/operational_rules.md"
-      ]
-    }
-  ],
+  "profiles": [],
   "agents": [
     {
       "roo": {
@@ -28,7 +14,10 @@
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core", "operational"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" }
+        ],
         "files": [
           "headhunter/instructions.md"
         ]
