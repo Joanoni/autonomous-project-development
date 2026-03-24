@@ -1,7 +1,7 @@
 <routing_table>
 
 ## Workflow Routing
-This table defines the sequence of transitions for the Fullstack Web Project team.
+This table defines the sequence of transitions for the team.
 
 Message templates are located at `agent_framework/inbox/templates/`.
 
@@ -19,5 +19,7 @@ Message templates are located at `agent_framework/inbox/templates/`.
 | Frontend tests passed | apd-frontend-tester | apd-architect | message_report.md |
 | Frontend bug found | apd-frontend-tester | apd-architect | message_report.md |
 | User test guide ready | apd-user-tester | user | message_user_test_guide.md |
+| Input Needed | [any] | user | message_briefing.md |
+| No matching trigger condition found | [any] | user | message_report.md |
 
 </routing_table>

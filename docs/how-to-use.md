@@ -141,7 +141,7 @@ The Orchestrator pauses and notifies you when `cycle/main.py` returns `user` —
 **To respond:**
 1. Read the message in `agent_framework/inbox/unread/message.md`.
 2. Take whatever action is needed (review the output, make a decision, etc.).
-3. If the cycle should continue, write your reply to `agent_framework/inbox/draft/message.md` with the appropriate `to:` field pointing to the next agent, then run `python agent_framework/scripts/user/post_work/main.py` manually.
+3. If the cycle should continue, write your reply to `agent_framework/inbox/draft/message.md` with the appropriate `to:` field pointing to the next agent, then run `python agent_framework/scripts/shared/post_work/main.py` manually.
 4. Type `Start` in the Orchestrator again to resume the cycle.
 
 ---

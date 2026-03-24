@@ -30,6 +30,6 @@ subject: User Test Report
 </user_test_report>
 ```
 
-Then run `python agent_framework/scripts/user/post_work/main.py` and type `Start` in the Orchestrator.
+Then run `python agent_framework/scripts/shared/post_work/main.py` and type `Start` in the Orchestrator.
 
 </user_test_request>

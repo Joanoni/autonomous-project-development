@@ -1,13 +1,5 @@
 {
-  "profiles": [
-    {
-      "name": "apd-core",
-      "files": [
-        "rules/global_rules.md",
-        "rules/xml_rules.md"
-      ]
-    }
-  ],
+  "profiles": [],
   "agents": [
     {
       "roo": {
@@ -20,7 +12,9 @@
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" }
+        ],
         "files": [
           "orchestrator/instructions.md"
         ]

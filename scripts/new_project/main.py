@@ -87,12 +87,14 @@ def main() -> None:
     }
     (agent_framework_dir / "config.json").write_text(json.dumps(config_out, indent=2))
     
-    # Step 4: Run cycle/main.py to generate initial agent files in the new project
-    cycle_script = root / "agent_framework/registry/internal/workspace/scripts/internal/cycle/main.py"
-    print("[4/4] Running cycle script to generate initial agent files...")
-    result = subprocess.run([sys.executable, str(cycle_script)], cwd=str(root))
-    if result.returncode != 0:
-        print("WARNING: cycle/main.py exited with a non-zero status.")
+    # Step 4: Run sync_registry to generate initial agent files in the new project
+    cycle_dir = root / "agent_framework/registry/internal/workspace/scripts/internal/cycle"
+    print("[4/4] Syncing registry (agents, workspace, roo environment)...")
+    sys.path.insert(0, str(cycle_dir))
+    import sync_registry
+    merged = sync_registry.run(root, root / "agent_framework/registry", root / "agent_framework")
+    if merged is None:
+        print("WARNING: sync_registry detected a slug conflict.")
     
     print(f"\n✅ APD successfully initialized at: {root}")
     print("   Open the project in VS Code, switch to APD Orchestrator mode, and type 'Start'.")

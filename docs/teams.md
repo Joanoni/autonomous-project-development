@@ -14,9 +14,6 @@ agent_framework/registry/project/
 ├── agents/
 │   ├── agents.json              ← team roster (written by Headhunter)
 │   ├── rules/
-│   │   ├── global_rules.md      ← always present (APD core rules)
-│   │   ├── operational_rules.md ← always present (operational agent rules)
-│   │   ├── xml_rules.md         ← always present (XML formatting rules)
 │   │   └── team_instructions.md ← routing table (written by Headhunter)
 │   ├── {agent-name}/
 │   │   └── instructions.md      ← agent-specific instructions (written by Headhunter)
@@ -24,15 +21,51 @@ agent_framework/registry/project/
 └── workspace/                   ← workspace files synced into agent_framework/
 ```
 
+> **Note:** `global_rules.md`, `operational_rules.md`, and `xml_rules.md` are **not** stored under `registry/project/`. They live in `registry/shared/agents/rules/` and are applied to agents automatically via the shared `apd-core` and `operational` profiles.
+
 On the next Orchestrator loop, `cycle/main.py` picks up the new `agents.json` and automatically rebuilds `.roomodes` and `.roo/rules-{slug}/` for the new team.
 
 ---
 
-## Built-in Example: `simple_code_project`
+## Built-in Examples
 
-APD ships with a reference example at `agent_framework/registry/examples/simple_code_project/`. This example demonstrates a full development cycle with a coder and a tester. The Headhunter can use it as a reference when designing a similar team.
+APD ships with two reference examples under `agent_framework/registry/examples/`. The Headhunter uses these as references when designing a team for a new project.
+
+---
+
+### `simple_code_project`
+
+A minimal single-agent example. Use this as a reference for projects that only need a coder with no automated testing.
 
 **Location:** `agent_framework/registry/examples/simple_code_project/`
+
+**Agents:**
+
+| Slug | Role |
+|---|---|
+| `apd-coder` | Senior Software Engineer — implements features and fixes bugs in `src/` |
+
+**Profiles defined in `agents/agents.json`:**
+
+| Profile | Source | Files | Applied to |
+|---|---|---|---|
+| `apd-core` | `shared` | `rules/global_rules.md`, `rules/xml_rules.md` | All agents |
+| `operational` | `shared` | `rules/operational_rules.md` | All agents |
+| `simple-team` | `project` | `rules/team_instructions.md` | All agents |
+
+**Workspace files** (synced into `agent_framework/` when this example is used):
+- `inbox/templates/message_briefing.md` — task briefing template
+- `inbox/templates/message_report.md` — execution report template
+- `memory/tech_stack.md` — canonical record of the project's technology choices
+- `memory/decisions.md` — log of significant architectural decisions
+
+---
+
+### `simple_code_and_test_project`
+
+A two-agent example with a coder and a tester. Use this as a reference for projects that require automated testing after each implementation cycle.
+
+**Location:** `agent_framework/registry/examples/simple_code_and_test_project/`
 
 **Agents:**
 
@@ -43,11 +76,11 @@ APD ships with a reference example at `agent_framework/registry/examples/simple_
 
 **Profiles defined in `agents/agents.json`:**
 
-| Profile | Files | Applied to |
-|---|---|---|
-| `apd-core` | `rules/global_rules.md`, `rules/xml_rules.md` | All agents |
-| `operational` | `rules/operational_rules.md` | All agents |
-| `simple-team` | `rules/team_instructions.md` | All agents |
+| Profile | Source | Files | Applied to |
+|---|---|---|---|
+| `apd-core` | `shared` | `rules/global_rules.md`, `rules/xml_rules.md` | All agents |
+| `operational` | `shared` | `rules/operational_rules.md` | All agents |
+| `simple-team` | `project` | `rules/team_instructions.md` | All agents |
 
 **Routing table** (from `agents/rules/team_instructions.md`):
 
@@ -65,7 +98,6 @@ APD ships with a reference example at `agent_framework/registry/examples/simple_
 - `inbox/templates/message_report.md` — execution report template
 - `memory/tech_stack.md` — canonical record of the project's technology choices
 - `memory/decisions.md` — log of significant architectural decisions
-- `scripts/user/post_work/main.py` — post-work utility script
 
 ---
 
@@ -99,20 +131,8 @@ Defines profiles and the agent roster. Each agent has a `roo` block (Roo mode co
 {
   "profiles": [
     {
-      "name": "apd-core",
-      "files": [
-        "rules/global_rules.md",
-        "rules/xml_rules.md"
-      ]
-    },
-    {
-      "name": "operational",
-      "files": [
-        "rules/operational_rules.md"
-      ]
-    },
-    {
       "name": "my-team",
+      "source": "project",
       "files": [
         "rules/team_instructions.md"
       ]
@@ -128,7 +148,11 @@ Defines profiles and the agent roster. Each agent has a `roo` block (Roo mode co
         "customInstructions": ""
       },
       "apd": {
-        "profiles": ["apd-core", "operational", "my-team"],
+        "profiles": [
+          { "name": "apd-core", "source": "shared" },
+          { "name": "operational", "source": "shared" },
+          { "name": "my-team", "source": "project" }
+        ],
         "files": ["my-agent/instructions.md"]
       }
     }
@@ -136,10 +160,12 @@ Defines profiles and the agent roster. Each agent has a `roo` block (Roo mode co
 }
 ```
 
+> **Note:** Do **not** define `apd-core` or `operational` profiles locally — they are provided by `registry/shared/agents/agents.json` and referenced via `"source": "shared"`. Only define team-specific profiles (e.g., `my-team`) in the project `agents.json`.
+
 **Rules:**
 - Slugs must be unique across both `internal/agents/agents.json` and `project/agents/agents.json`. A conflict will cause `cycle/main.py` to output `APD_CONFLICT:{slug}` and halt.
-- Profiles are resolved per-file — profiles defined in `project/agents/agents.json` are not available to agents defined in `internal/agents/agents.json` and vice versa.
-- File paths in `profiles` and `apd.files` are resolved relative to the `agents.json` directory.
+- Profiles are scoped by source. Use `"source": "shared"` to reference shared profiles, `"source": "project"` for profiles defined in the project `agents.json`.
+- File paths in `profiles[].files` are resolved relative to the `agents.json` that defines them. File paths in `apd.files` are resolved relative to the agent's own `agents.json` directory.
 
 ### Required: `agents/{agent-name}/instructions.md`
 
@@ -152,7 +178,7 @@ Agent-specific execution instructions. Wrap content in an XML tag matching the a
 1. Read the task briefing from `agent_framework/inbox/unread/message.md`.
 2. Do the work in your domain.
 3. Write a report to `agent_framework/inbox/draft/message.md`.
-4. Run `python agent_framework/scripts/user/post_work/main.py` and output `Done`.
+4. Run `python agent_framework/scripts/shared/post_work/main.py` and output `Done`.
 
 </my_agent_protocol>
 ```
@@ -170,6 +196,7 @@ The routing table for the team. Wrap in a `<routing_table>` XML tag:
 |---|---|---|---|
 | Task Complete | my-agent | user | message_report.md |
 | Input Needed | [any] | user | message_briefing.md |
+| No matching trigger condition found | [any] | user | message_report.md |
 
 </routing_table>
 ```
@@ -182,14 +209,13 @@ The routing table for the team. Wrap in a `<routing_table>` XML tag:
 
 ```
 agent_framework/registry/project/agents/
-├── agents.json              ← required: roster + profiles
+├── agents.json              ← required: roster + team-specific profiles
 ├── rules/
-│   ├── global_rules.md      ← pre-existing (do not modify)
-│   ├── operational_rules.md ← pre-existing (do not modify)
-│   ├── xml_rules.md         ← pre-existing (do not modify)
 │   └── team_instructions.md ← required: routing table
 └── {agent-name}/
     └── instructions.md      ← required per agent
 ```
+
+> `global_rules.md`, `operational_rules.md`, and `xml_rules.md` are **not** placed here. They live in `registry/shared/agents/rules/` and are applied automatically via the shared profiles.
 
 Once these files exist, the next Orchestrator loop will automatically provision the new team.
