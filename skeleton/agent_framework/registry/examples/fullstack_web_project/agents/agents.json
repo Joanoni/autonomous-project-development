@@ -1,0 +1,103 @@
+{
+  "profiles": [
+    {
+      "name": "apd-core",
+      "files": [
+        "rules/global_rules.md",
+        "rules/xml_rules.md"
+      ]
+    },
+    {
+      "name": "operational",
+      "files": [
+        "rules/operational_rules.md"
+      ]
+    },
+    {
+      "name": "fullstack-team",
+      "files": [
+        "rules/team_instructions.md"
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "roo": {
+        "slug": "apd-architect",
+        "name": "APD Architect",
+        "roleDefinition": "<role_definition>You are a Solution Architect. You decompose the project into tasks, assign them to the correct specialist, and track overall progress until the project is complete.</role_definition>",
+        "groups": ["read", "edit", "command"],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "files": ["architect/instructions.md"]
+      }
+    },
+    {
+      "roo": {
+        "slug": "apd-backend-dev",
+        "name": "APD Backend Developer",
+        "roleDefinition": "<role_definition>You are a Senior Backend Engineer. You implement API endpoints, business logic, and database integrations strictly within the src/backend/ directory.</role_definition>",
+        "groups": ["read", "edit", "command"],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "files": ["backend-dev/instructions.md"]
+      }
+    },
+    {
+      "roo": {
+        "slug": "apd-backend-tester",
+        "name": "APD Backend Tester",
+        "roleDefinition": "<role_definition>You are a Backend QA Engineer. You write and run automated tests for the backend strictly within the tests/backend/ directory and report results to the architect.</role_definition>",
+        "groups": ["read", "edit", "command"],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "files": ["backend-tester/instructions.md"]
+      }
+    },
+    {
+      "roo": {
+        "slug": "apd-frontend-dev",
+        "name": "APD Frontend Developer",
+        "roleDefinition": "<role_definition>You are a Senior Frontend Engineer. You implement UI components and API integrations strictly within the src/frontend/ directory.</role_definition>",
+        "groups": ["read", "edit", "command"],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "files": ["frontend-dev/instructions.md"]
+      }
+    },
+    {
+      "roo": {
+        "slug": "apd-frontend-tester",
+        "name": "APD Frontend Tester",
+        "roleDefinition": "<role_definition>You are a Frontend QA Engineer. You write and run automated tests for the frontend strictly within the tests/frontend/ directory and report results to the architect.</role_definition>",
+        "groups": ["read", "edit", "command"],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "files": ["frontend-tester/instructions.md"]
+      }
+    },
+    {
+      "roo": {
+        "slug": "apd-user-tester",
+        "name": "APD User Test Guide Writer",
+        "roleDefinition": "<role_definition>You are a User Testing Specialist. You create clear, step-by-step manual test guides for the human user to validate end-to-end flows in the running application.</role_definition>",
+        "groups": ["read", "edit"],
+        "customInstructions": ""
+      },
+      "apd": {
+        "profiles": ["apd-core", "operational", "fullstack-team"],
+        "files": ["user-tester/instructions.md"]
+      }
+    }
+  ]
+}
