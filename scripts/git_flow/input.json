@@ -1,0 +1,5 @@
+{
+  "current_branch": "improvements",
+  "commit_message": "docs: update scripts documentation to reflect input.json rename, step numbering fix, and add git_flow script docs",
+  "merge_message": "Merge improvements into main: add git_flow script, rename config.json to input.json, add fullstack_web_project example"
+}

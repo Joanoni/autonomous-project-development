@@ -12,6 +12,7 @@ customModes:
       - Keep output minimal - no prose, no padding
     groups:
       - read
+      - command
     source: project
   - slug: executor
     name: Executor ⚙️

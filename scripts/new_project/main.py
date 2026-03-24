@@ -9,13 +9,13 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent.resolve()
 REPO_ROOT = SCRIPT_DIR.parent.parent.resolve()
 SKELETON_DIR = REPO_ROOT / "skeleton"
-CONFIG_FILE = SCRIPT_DIR / "config.json"
+INPUT_FILE = SCRIPT_DIR / "input.json"
 
-def load_config() -> dict:
-    """Load config.json from the script directory. Returns empty dict on failure."""
-    if CONFIG_FILE.exists():
+def load_input() -> dict:
+    """Load input.json from the script directory. Returns empty dict on failure."""
+    if INPUT_FILE.exists():
         try:
-            return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+            return json.loads(INPUT_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             pass
     return {}
@@ -23,7 +23,7 @@ def load_config() -> dict:
 def main() -> None:
     print("=== APD Project Initializer (v2.0.0) ===")
     
-    config = load_config()
+    config = load_input()
     default_dest = config.get("default_destination", "").strip()
 
     if default_dest:

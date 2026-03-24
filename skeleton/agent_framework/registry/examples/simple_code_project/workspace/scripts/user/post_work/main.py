@@ -1,7 +1,5 @@
 import os
 import re
-import shutil
-from datetime import datetime, timezone
 
 
 REQUIRED_FIELDS = ["from", "to", "subject"]
@@ -63,64 +61,10 @@ def validate_metadata(metadata):
     return errors
 
 
-def archive_unread(base_dir, sender, recipient):
-    """
-    Moves the entire contents of inbox/unread/ into a new timestamped folder
-    inside inbox/read/.  Folder name pattern: YYYYMMDD_HHMMSS_{from}_{to}
-    """
-    unread_dir = os.path.join(base_dir, "agent_framework/inbox/unread")
-    read_dir = os.path.join(base_dir, "agent_framework/inbox/read")
-
-    if not os.path.exists(unread_dir):
-        print("[Info] unread/ is empty or does not exist — nothing to archive.")
-        return
-
-    contents = os.listdir(unread_dir)
-    if not contents:
-        print("[Info] unread/ is empty — nothing to archive.")
-        return
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    sender = sender or "unknown"
-    recipient = recipient or "unknown"
-    archive_name = f"{timestamp}_{sender}_{recipient}"
-    archive_path = os.path.join(read_dir, archive_name)
-
-    os.makedirs(archive_path, exist_ok=True)
-
-    for item in contents:
-        src = os.path.join(unread_dir, item)
-        dst = os.path.join(archive_path, item)
-        shutil.move(src, dst)
-
-    print(f"[Success] Archived unread/ contents -> read/{archive_name}")
-
-
-def move_draft_to_unread(base_dir):
-    """
-    Moves all files from inbox/draft/ into inbox/unread/.
-    """
-    draft_dir = os.path.join(base_dir, "agent_framework/inbox/draft")
-    unread_dir = os.path.join(base_dir, "agent_framework/inbox/unread")
-
-    os.makedirs(unread_dir, exist_ok=True)
-
-    moved_count = 0
-    for item in os.listdir(draft_dir):
-        src = os.path.join(draft_dir, item)
-        dst = os.path.join(unread_dir, item)
-        shutil.move(src, dst)
-        moved_count += 1
-
-    print(f"[Success] Moved {moved_count} item(s) from draft/ to unread/.")
-
-
 def main():
     base_dir = os.getcwd()
     draft_dir = os.path.join(base_dir, "agent_framework/inbox/draft")
     draft_message = os.path.join(draft_dir, "message.md")
-    unread_dir = os.path.join(base_dir, "agent_framework/inbox/unread")
-    unread_message = os.path.join(unread_dir, "message.md")
 
     print("--- Starting Post-Work Routine ---")
 
@@ -144,27 +88,7 @@ def main():
             print(f"        - {err}")
         return
 
-    draft_sender = draft_metadata["from"]
-    draft_recipient = draft_metadata["to"]
-
-    print(f"[Info] Message validated - from: '{draft_sender}', to: '{draft_recipient}', subject: '{draft_metadata['subject']}'")
-
-    # 3. Archive current unread/ contents using unread message metadata
-    unread_sender = None
-    unread_recipient = None
-    if os.path.exists(unread_message):
-        try:
-            unread_metadata = parse_metadata(unread_message)
-            unread_sender = unread_metadata.get("from")
-            unread_recipient = unread_metadata.get("to")
-        except ValueError:
-            pass
-
-    archive_unread(base_dir, unread_sender, unread_recipient)
-
-    # 4. Move draft/ → unread/
-    move_draft_to_unread(base_dir)
-
+    print(f"[Info] Message validated - from: '{draft_metadata['from']}', to: '{draft_metadata['to']}', subject: '{draft_metadata['subject']}'")
     print("--- Post-Work Routine Complete ---")
 
 
