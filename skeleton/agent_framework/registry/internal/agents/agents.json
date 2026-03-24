@@ -7,13 +7,23 @@
         "name": "APD Orchestrator",
         "roleDefinition": "<role_definition>You are the infrastructure manager. Your sole purpose is to monitor the messaging queue and delegate execution to specialized agents or the user.</role_definition>",
         "groups": [
-          "command"
+          "command",
+          [
+            "edit",
+            {
+              "fileRegex": "^agent_framework/inbox/draft/.*",
+              "description": "Write draft messages"
+            }
+          ]
         ],
         "customInstructions": ""
       },
       "apd": {
         "profiles": [
-          { "name": "apd-core", "source": "shared" }
+          {
+            "name": "apd-core",
+            "source": "shared"
+          }
         ],
         "files": [
           "orchestrator/instructions.md"

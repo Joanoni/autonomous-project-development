@@ -14,7 +14,7 @@ customModes:
       - read
       - command
       - - edit
-        - fileRegex: scripts/internal/.*
+        - fileRegex: ^scripts/internal/.*
           description: Only allowed to edit files inside scripts/internal/
     source: project
   - slug: executor

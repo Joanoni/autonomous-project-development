@@ -56,8 +56,9 @@ The [`skeleton/`](../skeleton/) directory is the **template** for every APD proj
 
 | Path | Purpose |
 |---|---|
-| `agent_framework/registry/internal/` | Orchestrator blueprint, global rules, and the `cycle/main.py` script |
-| `agent_framework/registry/project/` | Headhunter blueprint, operational rules, and project workspace defaults |
+| `agent_framework/registry/shared/` | Shared profiles (global + XML + operational rules) and initial inbox/memory files synced into every project |
+| `agent_framework/registry/internal/` | Orchestrator blueprint and the `cycle/main.py` script |
+| `agent_framework/registry/project/` | Headhunter blueprint and project workspace defaults |
 | `agent_framework/registry/examples/` | Example teams the Headhunter can reference when designing a new team |
 | `agent_framework/inbox/` | Filesystem message bus (created/reset by workspace sync) |
 | `agent_framework/memory/` | Persistent technical state shared across agents |
@@ -94,6 +95,7 @@ Persistent files shared across all agents:
 | File | Purpose |
 |---|---|
 | `decisions.md` | Log of significant architectural and design decisions |
+| `lessons_learned.md` | Log of recurring errors (technical and behavioral) and their solutions, shared across all agents to prevent repeated mistakes |
 
 ---
 
@@ -107,11 +109,10 @@ APD uses the filesystem — not API calls, shared memory, or message queues — 
 - **Decoupling**: agents never call each other directly; the Orchestrator mediates all routing.
 
 The flow is:
-1. An agent writes `message.md` (and any attachments) to `agent_framework/inbox/draft/`. The metadata block must include `from`, `to`, and `subject`.
-2. The agent runs `post_work/main.py`, which validates the draft, archives the current `unread/` contents into a timestamped folder inside `read/`, and promotes `draft/` contents to `unread/`.
-3. The agent outputs `Done` — signaling the Orchestrator to re-run the cycle.
-4. The Orchestrator runs `cycle/main.py`, which (among other things) reads the `to` field from `unread/message.md` and returns the recipient's slug.
-5. The Orchestrator invokes the recipient agent via Roo's `new_task` tool.
+1. An agent concludes its task by calling `attempt_completion` with the outgoing XML message as the result. The metadata block must include `from`, `to`, and `subject`.
+2. The Orchestrator receives the result and writes it verbatim to `agent_framework/inbox/draft/message.md`.
+3. The Orchestrator runs `cycle/main.py`, which archives the current `unread/` contents into a timestamped folder inside `read/`, promotes `draft/` contents to `unread/`, and returns the recipient's slug.
+4. The Orchestrator invokes the recipient agent via Roo's `new_task` tool, passing the XML message as instructions.
 
 ---
 

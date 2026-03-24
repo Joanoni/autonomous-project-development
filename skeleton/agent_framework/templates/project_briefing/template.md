@@ -4,7 +4,7 @@ to: apd-headhunter
 subject: New Project Briefing
 </message_metadata>
 
-<task_briefing>
+<message_body>
 
 ## Project Description
 {{brief description of what the project should do}}
@@ -16,4 +16,4 @@ subject: New Project Briefing
 - {{criterion 1}}
 - {{criterion 2}}
 
-</task_briefing>
+</message_body>

@@ -1,5 +1,5 @@
 {
   "current_branch": "improvements",
-  "commit_message": "refactor: introduce shared registry, split cycle script, add simple_code_and_test_project example, and clean up per-example rules",
-  "merge_message": "merge: improvements -> main -- shared registry, cycle refactor, new example, rules cleanup"
+  "commit_message": "docs: remove post_work references, fix agent input source (new_task instructions), add shared workspace sync, fix orchestrator constraints",
+  "merge_message": "merge: improvements -> main -- doc updates for post_work removal, new_task input protocol, shared workspace sync, orchestrator constraints"
 }
