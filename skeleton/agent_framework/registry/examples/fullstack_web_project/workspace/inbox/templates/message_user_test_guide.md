@@ -1,11 +1,3 @@
-<message_metadata>
-from: apd-user-tester
-to: user
-subject: User Test Guide Ready
-</message_metadata>
-
-<user_test_request>
-
 ## Action Required
 A new end-to-end flow is ready for manual testing. Please follow the test guide at `docs/user-testing/guide.md`.
 
@@ -31,5 +23,3 @@ subject: User Test Report
 ```
 
 Then run `python agent_framework/scripts/shared/post_work/main.py` and type `Start` in the Orchestrator.
-
-</user_test_request>

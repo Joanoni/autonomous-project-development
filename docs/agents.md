@@ -22,25 +22,28 @@ There are two agent categories:
 | **Slug** | `apd-orchestrator` |
 | **Category** | Internal |
 | **Roo Group** | `command` |
-| **Domain** | No file writes — read-only pipeline manager |
+| **Domain** | `agent_framework/inbox/draft/` (writes draft messages only) |
 
 **Role:** The infrastructure manager. Its sole purpose is to run the cycle script and delegate execution to the correct agent or pause for human intervention.
 
-**Inputs:** None — the Orchestrator does not have an inbox and does not read from one. It is triggered by the human typing `Start`.
+**Inputs:** Receives an XML message in the standard format — either pasted by the human in chat (first run) or returned by an agent via `attempt_completion` (subsequent runs).
 
-**Outputs:** Invokes sub-agents via Roo's `new_task` tool with the command `Start`.
+**Outputs:** Invokes sub-agents via Roo's `new_task` tool, passing the full XML message as task instructions.
 
 **Execution Loop:**
-1. Run `python agent_framework/scripts/internal/cycle/main.py`.
-2. If output starts with `APD_CONFLICT:` → pause and notify the human to resolve the agent slug conflict.
-3. If output is `user` → pause and notify the human.
-4. If output is `empty` → report "Queue Empty" and stop.
-5. If output is an agent slug → invoke that agent via `new_task`.
-6. When the sub-task returns `Done` → repeat from step 1.
+1. Write the received XML message verbatim to `agent_framework/inbox/draft/message.md`.
+2. Run `python agent_framework/scripts/internal/cycle/main.py`.
+3. If output starts with `APD_CONFLICT:` → pause and notify the human to resolve the agent slug conflict.
+4. If output is `user` → pause and notify the human.
+5. If output is `empty` → report "Queue Empty" and stop.
+6. If output is an agent slug → invoke that agent via `new_task`, passing the full XML message as instructions.
+7. When the sub-task returns its result (a new XML message) → repeat from step 1.
 
 **Constraints:**
-- Does not read files, execute logic scripts, or write code.
+- Writes only `agent_framework/inbox/draft/message.md` — no other file writes.
 - Relies entirely on `cycle/main.py` output for routing decisions.
+- Relies entirely on the received message for content — never modifies or summarizes it.
+- Does not populate any `input.json` — the cycle script reads the filesystem directly.
 
 ---
 
@@ -54,12 +57,12 @@ There are two agent categories:
 
 **Role:** The initialization specialist. Transforms a project briefing into a fully provisioned execution environment by designing the team and writing the agent roster.
 
-**Inputs:** Reads from `agent_framework/inbox/unread/` — expects a project briefing in `message.md`.
+**Inputs:** Receives the project briefing via `new_task` instructions in the standard XML message format (`<message_metadata>` + `<message_body>`).
 
-**Outputs:** Writes a task briefing to `agent_framework/inbox/draft/message.md` addressed to the first operational agent, then runs `post_work`.
+**Outputs:** Returns a task briefing via `attempt_completion` in the standard XML message format, addressed to the first operational agent.
 
 **Execution Pipeline:**
-1. **Read Briefing:** Read the project briefing from `agent_framework/inbox/unread/message.md`.
+1. **Read Briefing:** Read the project briefing from the `<message_body>` block in the `new_task` instructions.
 2. **Design the Team:** Think about the ideal team for the project. Use `agent_framework/registry/examples/` as reference.
 3. **Create Agent Instructions:** For each operational agent, create an instructions file at `agent_framework/registry/project/agents/{agent-name}/instructions.md`.
 4. **Create Team Rules:** Create a team rules file at `agent_framework/registry/project/agents/rules/`.
@@ -78,15 +81,14 @@ There are two agent categories:
 
 **Role:** Implements features and fixes bugs based on the task briefing and the project's tech stack. Writes production-ready code strictly within the `src/` directory.
 
-**Inputs:** Reads from `agent_framework/inbox/unread/` — expects a task briefing in `message.md` with objective, success criteria, and constraints.
+**Inputs:** Receives the task briefing via `new_task` instructions in the standard XML message format (`<message_metadata>` + `<message_body>`).
 
-**Outputs:** Writes an execution report to `agent_framework/inbox/draft/message.md` (addressed `to: apd-tester`) upon completion, or escalates (`to: user`) if a blocker is encountered.
+**Outputs:** Returns an execution report via `attempt_completion` in the standard XML message format, addressed `to: apd-tester` upon completion, or `to: user` if a blocker is encountered.
 
 **Execution Pipeline:**
-1. Read the task briefing from `unread/`.
+1. Read the task briefing from the `new_task` instructions.
 2. Implement the required feature or bug fix in `src/`.
-3. Write a report to `draft/message.md`.
-4. Run `post_work` and output `Done`.
+3. Return a report via `attempt_completion` in the standard XML message format.
 
 > **Note:** This agent is part of the built-in `simple_code_project` example. Real projects will have agents defined by the Headhunter with custom slugs and instructions.
 
@@ -102,16 +104,15 @@ There are two agent categories:
 
 **Role:** Validates the implementation by creating and running tests. Determines whether the feature passes or fails and routes accordingly.
 
-**Inputs:** Reads from `agent_framework/inbox/unread/` — expects an execution report in `message.md` from the coder.
+**Inputs:** Receives the execution report via `new_task` instructions in the standard XML message format (`<message_metadata>` + `<message_body>`).
 
-**Outputs:** Writes a test report to `agent_framework/inbox/draft/message.md` addressed `to: user` (tests passed) or `to: apd-coder` (bug found).
+**Outputs:** Returns a test report via `attempt_completion` in the standard XML message format, addressed `to: user` (tests passed) or `to: apd-coder` (bug found).
 
 **Execution Pipeline:**
-1. Read the execution report from `unread/`.
+1. Read the execution report from the `new_task` instructions.
 2. Create or update test files in `tests/`.
 3. Run the test suite and validate results.
-4. Write a report to the appropriate recipient based on the outcome.
-5. Run `post_work` and output `Done`.
+4. Return a report via `attempt_completion` in the standard XML message format addressed to the appropriate recipient.
 
 > **Note:** This agent is part of the built-in `simple_code_project` example. Real projects will have agents defined by the Headhunter with custom slugs and instructions.
 
@@ -146,19 +147,28 @@ All resolved files are copied into `.roo/rules-{slug}/`.
 
 ## Key Behavioral Rules
 
+### Lessons-Driven Execution
+At the start of every task, agents read `agent_framework/memory/lessons_learned.md` alongside `agent_framework/memory/decisions.md`. When an error is encountered and resolved — whether technical (code, dependencies, commands) or behavioral (protocol, message format) — the agent appends an entry to `lessons_learned.md` before concluding the task. This prevents the same mistakes from recurring across sessions.
+
 ### Full Autonomy
-Agents **never ask the user for confirmation**. The only way an agent communicates with the user is by writing a message to `inbox/draft/message.md` with `to: user` — the Orchestrator will then pause and notify the human. This is enforced by [`global_rules.md`](../skeleton/agent_framework/registry/shared/agents/rules/global_rules.md).
+Agents **never ask the user for confirmation**. The only way an agent communicates with the user is by setting `to: user` in the `<message_metadata>` of their `attempt_completion` result — the Orchestrator will then pause and notify the human. This is enforced by [`global_rules.md`](../skeleton/agent_framework/registry/shared/agents/rules/global_rules.md).
 
-### The "Done" Protocol
-Every operational agent must conclude its task by calling `attempt_completion` with `result` set to exactly `"Done"` — no punctuation, no summary, no additional text. This signals the Orchestrator that the sub-task has completed and the loop should continue.
+### The Handoff Protocol
+Every operational agent must conclude its task by calling `attempt_completion` with `result` set to the full outgoing message in the standard XML format:
 
-### Post-Work Mandatory
-Before outputting `Done`, every operational agent **must**:
-1. Write the outgoing message to `agent_framework/inbox/draft/message.md` with valid `from`, `to`, and `subject` metadata fields.
-2. Run `python agent_framework/scripts/shared/post_work/main.py`.
-3. If the script prints an error, correct `draft/message.md` and re-run the command.
+```
+<message_metadata>
+from: {your_slug}
+to: {recipient_slug}
+subject: {brief description}
+</message_metadata>
 
-This validates the draft, archives the current `unread/` contents into `read/`, and promotes the draft to `unread/` for the next agent.
+<message_body>
+{your message content here}
+</message_body>
+```
+
+The Orchestrator reads this result, writes it verbatim to `agent_framework/inbox/draft/message.md`, runs `cycle/main.py` (which archives the current `unread/` contents, promotes the draft to `unread/`, and returns the next recipient slug), and invokes the next agent via `new_task` with the XML message as instructions.
 
 ### No Direct Mode Switching
-Agents **cannot** invoke other agents directly or switch Roo modes. Handoff is achieved solely by writing a message to `agent_framework/inbox/draft/` and running `post_work`. The Orchestrator detects the new `unread/message.md` on its next cycle and performs the invocation.
+Agents **cannot** invoke other agents directly or switch Roo modes. Handoff is achieved solely via `attempt_completion` with the standard XML message format. The Orchestrator mediates all routing.

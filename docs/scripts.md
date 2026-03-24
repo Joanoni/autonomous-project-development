@@ -8,7 +8,7 @@ APD scripts are Python utilities that power the framework's automation. They fal
 |---|---|---|
 | **Root Entry Point** | `scripts/new_project/main.py` | Creates a new APD-managed project |
 | **Root Entry Point** | `scripts/git_flow/main.py` | Commits, merges, and resets the git flow for a stable release |
-| **Runtime Scripts** | `cycle/main.py`, `post_work/main.py` | Support the autonomous agent loop |
+| **Runtime Scripts** | `cycle/main.py` | Supports the autonomous agent loop |
 
 Runtime scripts live inside a generated project under `agent_framework/scripts/` and are run from the **project root** (not from the script's own directory). They are synced from the registry workspace on every cycle.
 
@@ -112,12 +112,12 @@ Fill in all three fields before running:
 
 **Purpose:** The core runtime script. Runs every time the Orchestrator starts its loop. Performs five steps in order:
 1. **Merge agents** — loads `registry/shared/agents/agents.json`, `registry/internal/agents/agents.json`, and `registry/project/agents/agents.json`, checks for slug conflicts between internal and project agents, and produces a merged agent roster.
-2. **Sync workspace** — copies files from `registry/internal/workspace/` and `registry/project/workspace/` into `agent_framework/`, keeping the newer version of any file that already exists.
+2. **Sync workspace** — copies files from `registry/shared/workspace/`, `registry/internal/workspace/`, and `registry/project/workspace/` (in that order) into `agent_framework/`, keeping the newer version of any file that already exists.
 3. **Sync Roo environment** — rebuilds `.roomodes` and `.roo/rules-{slug}/` from the merged agent definitions. Only updates entries that have changed (compares mtimes and mode entries).
 4. **Promote messages** — if `inbox/draft/` has content: archives the current `inbox/unread/` contents into a timestamped folder inside `inbox/read/` (skipped if `unread/` contains only a `.gitkeep`), then moves all files from `draft/` into `unread/`.
 5. **Scan inbox** — reads `agent_framework/inbox/unread/message.md` and returns the `to` field value.
 
-**Input:** None — reads the filesystem directly.
+**Input:** None — reads the filesystem directly. The Orchestrator writes `inbox/draft/message.md` before calling this script.
 
 **Output (stdout, last line):**
 
@@ -140,61 +140,28 @@ Fill in all three fields before running:
 
 ---
 
-### `post_work/main.py`
-
-**Location (registry source):** [`skeleton/agent_framework/registry/shared/workspace/scripts/shared/post_work/main.py`](../skeleton/agent_framework/registry/shared/workspace/scripts/shared/post_work/main.py)
-
-**Location (in generated project):** `agent_framework/scripts/shared/post_work/main.py`
-
-**Purpose:** Validates the outgoing draft message. Every operational agent must run this before outputting `Done`. The actual message promotion (archiving `unread/` and moving `draft/` → `unread/`) is handled automatically by `cycle/main.py` at the start of the next loop iteration.
-
-**Input:** `agent_framework/inbox/draft/message.md` — written by the agent before calling this script. No `input.json` is required.
-
-**Required metadata in `draft/message.md`:**
-```
-<message_metadata>
-from: {sender-slug}
-to: {recipient-slug}
-subject: {brief description}
-</message_metadata>
-```
-
-**Steps:**
-1. Read and parse the `<message_metadata>` block from `agent_framework/inbox/draft/message.md`.
-2. Validate that `from`, `to`, and `subject` are all present and non-empty.
-   - If invalid: print a descriptive error to stdout and **exit without moving anything**. The agent must correct the draft and re-run.
-
-**Side effects:**
-- On success: prints a confirmation and exits. The draft remains in `draft/` until `cycle/main.py` promotes it.
-- On validation failure: nothing is moved; the agent must fix the draft and re-run.
-
-**When called:** By every operational agent as the **last action** before outputting `Done`.
-
----
-
 ## Script Relationships
 
 ```mermaid
 sequenceDiagram
-    participant HH as apd-headhunter
-    participant CY as cycle/main.py
-    participant PW as post_work/main.py
+    participant HU as human (or agent)
     participant OR as apd-orchestrator
+    participant CY as cycle/main.py
+    participant AG as next agent
 
-    Note over HH: Reads briefing from inbox/unread/
-    HH->>HH: Writes registry/project/agents/agents.json
-    HH->>PW: Writes draft/message.md → runs post_work
-    PW-->>HH: Validates draft metadata only (no file moves)
-    HH-->>OR: Done
+    HU-->>OR: XML message (chat or attempt_completion result)
 
     loop Orchestrator Loop
+        OR->>OR: Writes XML to inbox/draft/message.md
         OR->>CY: python agent_framework/scripts/internal/cycle/main.py
         Note over CY: 1. Merge agents.json (shared + internal + project)
         Note over CY: 2. Sync workspace files
         Note over CY: 3. Sync .roomodes + .roo/rules-{slug}/
-        Note over CY: 4. Archive unread→read/, promote draft→unread/
+        Note over CY: 4. Archive unread→read/ → promote draft→unread/
         Note over CY: 5. Scan inbox/unread/message.md
         CY-->>OR: "agent-slug" (or user / empty / APD_CONFLICT:slug)
-        OR->>OR: Invokes next agent via new_task
+        OR->>AG: new_task(instructions = XML message)
+        AG->>AG: Does work
+        AG-->>OR: attempt_completion(result = XML message)
     end
 ```

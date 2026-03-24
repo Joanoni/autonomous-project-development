@@ -58,6 +58,7 @@ A minimal single-agent example. Use this as a reference for projects that only n
 - `inbox/templates/message_report.md` — execution report template
 - `memory/tech_stack.md` — canonical record of the project's technology choices
 - `memory/decisions.md` — log of significant architectural decisions
+- `memory/lessons_learned.md` — log of recurring errors and their solutions
 
 ---
 
@@ -98,6 +99,7 @@ A two-agent example with a coder and a tester. Use this as a reference for proje
 - `inbox/templates/message_report.md` — execution report template
 - `memory/tech_stack.md` — canonical record of the project's technology choices
 - `memory/decisions.md` — log of significant architectural decisions
+- `memory/lessons_learned.md` — log of recurring errors and their solutions
 
 ---
 
@@ -105,13 +107,13 @@ A two-agent example with a coder and a tester. Use this as a reference for proje
 
 When the Headhunter receives a project briefing, it:
 
-1. Reads the project briefing from `agent_framework/inbox/unread/message.md`.
+1. Reads the project briefing from the `<message_body>` block in the `new_task` instructions.
 2. Browses `agent_framework/registry/examples/` to find a reference team that fits the project scope.
 3. Designs the agent roster and routing table for the project.
 4. Creates agent instruction files at `agent_framework/registry/project/agents/{agent-name}/instructions.md`.
 5. Creates a team rules file at `agent_framework/registry/project/agents/rules/` (e.g., `team_instructions.md`) containing the routing table.
 6. Writes `agent_framework/registry/project/agents/agents.json` with the full roster.
-7. Writes a task briefing to `agent_framework/inbox/draft/message.md` addressed to the first operational agent, then runs `post_work` and outputs `Done`.
+7. Returns a task briefing via `attempt_completion` in the standard XML message format, addressed to the first operational agent.
 
 On the next Orchestrator loop, `cycle/main.py` detects the updated `agents.json` and rebuilds the Roo environment for the new team automatically.
 
@@ -175,10 +177,20 @@ Agent-specific execution instructions. Wrap content in an XML tag matching the a
 <my_agent_protocol>
 
 ## Execution Pipeline
-1. Read the task briefing from `agent_framework/inbox/unread/message.md`.
+1. Read the task briefing from the `<message_body>` block in the `new_task` instructions.
 2. Do the work in your domain.
-3. Write a report to `agent_framework/inbox/draft/message.md`.
-4. Run `python agent_framework/scripts/shared/post_work/main.py` and output `Done`.
+3. Return a report via `attempt_completion` in the standard XML message format:
+   ```
+   <message_metadata>
+   from: {your_slug}
+   to: {recipient_slug}
+   subject: {brief description}
+   </message_metadata>
+
+   <message_body>
+   {your report content here}
+   </message_body>
+   ```
 
 </my_agent_protocol>
 ```

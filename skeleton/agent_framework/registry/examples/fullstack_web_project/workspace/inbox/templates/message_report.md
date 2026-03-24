@@ -1,11 +1,3 @@
-<message_metadata>
-from: {{sender_slug}}
-to: {{recipient_slug}}
-subject: {{subject}}
-</message_metadata>
-
-<task_report>
-
 ## Execution Summary
 - **Status:** {{passed | failed | blocked}}
 - **Actions Taken:** {{action_summary}}
@@ -19,5 +11,3 @@ subject: {{subject}}
 - **Crucial Changes:** {{pivot_details}}
 
 </context_delta>
-
-</task_report>
