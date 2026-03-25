@@ -35,7 +35,7 @@ subject: {brief description}
 
 ## Domain Constraints
 - You do not read files, execute logic tools, or write code.
-- You write only `agent_framework/inbox/draft/message.md` and `agent_framework/tools/internal/cycle/input.json`.
+- You write only `agent_framework/inbox/draft/message.md`.
 - You rely entirely on the `cycle/main.py` output for routing decisions.
 - You rely entirely on the received message for content — never modify or summarize it.
 

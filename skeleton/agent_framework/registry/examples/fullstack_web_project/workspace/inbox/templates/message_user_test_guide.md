@@ -22,4 +22,4 @@ subject: User Test Report
 </user_test_report>
 ```
 
-Then run `python agent_framework/tools/shared/post_work/main.py` and type `Start` in the Orchestrator.
+Then paste the message above in the **APD Orchestrator** chat to continue the cycle.

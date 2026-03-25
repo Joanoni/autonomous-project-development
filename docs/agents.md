@@ -22,7 +22,7 @@ There are two agent categories:
 | **Slug** | `apd-orchestrator` |
 | **Category** | Internal |
 | **Roo Group** | `command` |
-| **Domain** | `agent_framework/inbox/draft/` (writes draft messages only) |
+| **Domain** | `command` group (runs `cycle/main.py`); restricted `edit` group scoped to `agent_framework/inbox/draft/` (writes draft messages only) |
 
 **Role:** The infrastructure manager. Its sole purpose is to run the cycle tool and delegate execution to the correct agent or pause for human intervention.
 
