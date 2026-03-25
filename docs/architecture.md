@@ -13,7 +13,7 @@ The core problem APD solves: AI coding assistants are powerful but require const
 ```mermaid
 graph TD
     subgraph APD_Repo["APD Repository (this repo)"]
-        NP["scripts/new_project/main.py"]
+        NP["tools/new_project/main.py"]
         SK["skeleton/"]
     end
 
@@ -39,14 +39,14 @@ graph TD
 
 ## Two Layers
 
-### Layer 1 — Initializer (`scripts/new_project/main.py`)
+### Layer 1 — Initializer (`tools/new_project/main.py`)
 
-The [`scripts/new_project/main.py`](../scripts/new_project/main.py) script is the **entry point** for creating a new APD-managed project. It:
+The [`tools/new_project/main.py`](../tools/new_project/main.py) tool is the **entry point** for creating a new APD-managed project. It:
 
 1. Asks for a destination folder and project name (or a Git repository URL for remote projects).
 2. Copies the entire [`skeleton/`](../skeleton/) directory into the new project root.
 3. Generates `agent_framework/config.json` with project metadata.
-4. Runs [`cycle/main.py`](../skeleton/agent_framework/registry/internal/workspace/scripts/internal/cycle/main.py) to bootstrap the initial runtime environment (`.roomodes`, `.roo/rules-*/`, workspace files).
+4. Calls [`sync_registry.run()`](../skeleton/agent_framework/registry/internal/workspace/tools/internal/cycle/sync_registry.py) directly to bootstrap the initial runtime environment (`.roomodes`, `.roo/rules-*/`, workspace files).
 
 After this step, the generated project is fully self-contained and ready to be opened in VS Code with Roo.
 
@@ -57,7 +57,7 @@ The [`skeleton/`](../skeleton/) directory is the **template** for every APD proj
 | Path | Purpose |
 |---|---|
 | `agent_framework/registry/shared/` | Shared profiles (global + XML + operational rules) and initial inbox/memory files synced into every project |
-| `agent_framework/registry/internal/` | Orchestrator blueprint and the `cycle/main.py` script |
+| `agent_framework/registry/internal/` | Orchestrator blueprint and the `cycle/main.py` tool |
 | `agent_framework/registry/project/` | Headhunter blueprint and project workspace defaults |
 | `agent_framework/registry/examples/` | Example teams the Headhunter can reference when designing a new team |
 | `agent_framework/inbox/` | Filesystem message bus (created/reset by workspace sync) |
@@ -147,12 +147,11 @@ graph TD
 ```
 
 **Profile resolution per agent:**
-1. For each profile name listed in the agent's `apd.profiles` array, copy the files listed under that profile in the same `agents.json`.
-2. Copy the agent's own `apd.files` entries.
-3. All files are resolved relative to the `agents.json` directory.
+1. For each profile reference in the agent's `apd.profiles` array, the `source` field (`"shared"`, `"internal"`, or `"project"`) identifies which registry's `agents.json` defines that profile. The files listed under that profile in the corresponding registry are copied.
+2. Copy the agent's own `apd.files` entries, resolved relative to the agent's own `agents.json` directory.
 
 This means:
-- Global rules (`apd-core` profile) apply to **every** agent.
-- Operational rules (`operational` profile) apply to all non-orchestrator agents.
-- Team-specific rules (custom profile) apply only to agents in that team.
+- Global rules (`apd-core` profile, source `shared`) apply to **every** agent.
+- Operational rules (`operational` profile, source `shared`) apply to all non-orchestrator agents.
+- Team-specific rules (custom profile, source `project`) apply only to agents in that team.
 - Agent-specific instruction files define the precise execution pipeline for each role.

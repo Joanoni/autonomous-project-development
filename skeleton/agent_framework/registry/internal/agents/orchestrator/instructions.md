@@ -5,7 +5,7 @@
 Whenever you receive a message in the standard XML format, follow this loop:
 
 1. **Write Draft:** Write the received message verbatim to `agent_framework/inbox/draft/message.md`.
-2. **Sync & Scan:** Run `python agent_framework/scripts/internal/cycle/main.py`. The script will promote the draft to `unread/` and return the routing result.
+2. **Sync & Scan:** Run `python agent_framework/tools/internal/cycle/main.py`. The tool will promote the draft to `unread/` and return the routing result.
 3. **Route** based on the output:
 
 | Output | Action |
@@ -34,8 +34,8 @@ subject: {brief description}
 ```
 
 ## Domain Constraints
-- You do not read files, execute logic scripts, or write code.
-- You write only `agent_framework/inbox/draft/message.md` and `agent_framework/scripts/internal/cycle/input.json`.
+- You do not read files, execute logic tools, or write code.
+- You write only `agent_framework/inbox/draft/message.md` and `agent_framework/tools/internal/cycle/input.json`.
 - You rely entirely on the `cycle/main.py` output for routing decisions.
 - You rely entirely on the received message for content — never modify or summarize it.
 

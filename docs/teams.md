@@ -103,6 +103,60 @@ A two-agent example with a coder and a tester. Use this as a reference for proje
 
 ---
 
+### `fullstack_web_project`
+
+A six-agent example for full-stack web applications. Use this as a reference for projects that require separate backend and frontend development tracks, automated testing for both, and a manual user-testing step before delivery.
+
+**Location:** `agent_framework/registry/examples/fullstack_web_project/`
+
+**Agents:**
+
+| Slug | Role |
+|---|---|
+| `apd-architect` | Solution Architect — decomposes the project into tasks, assigns them to specialists, and tracks overall progress |
+| `apd-backend-dev` | Senior Backend Engineer — implements API endpoints, business logic, and database integrations in `src/backend/` |
+| `apd-backend-tester` | Backend QA Engineer — writes and runs automated tests for the backend in `tests/backend/` |
+| `apd-frontend-dev` | Senior Frontend Engineer — implements UI components and API integrations in `src/frontend/` |
+| `apd-frontend-tester` | Frontend QA Engineer — writes and runs automated tests for the frontend in `tests/frontend/` |
+| `apd-user-tester` | User Testing Specialist — creates step-by-step manual test guides for the human to validate end-to-end flows |
+
+**Profiles defined in `agents/agents.json`:**
+
+| Profile | Source | Files | Applied to |
+|---|---|---|---|
+| `apd-core` | `shared` | `rules/global_rules.md`, `rules/xml_rules.md` | All agents |
+| `operational` | `shared` | `rules/operational_rules.md` | All agents |
+| `fullstack-team` | `project` | `rules/team_instructions.md` | All agents |
+
+**Routing table** (from `agents/rules/team_instructions.md`):
+
+| Trigger Condition | From | To |
+|---|---|---|
+| Backend task assigned | `apd-architect` | `apd-backend-dev` |
+| Frontend task assigned | `apd-architect` | `apd-frontend-dev` |
+| E2E flow ready for user testing | `apd-architect` | `apd-user-tester` |
+| Project complete | `apd-architect` | `user` |
+| Input or decision needed | `apd-architect` | `user` |
+| Backend implementation done | `apd-backend-dev` | `apd-backend-tester` |
+| Frontend implementation done | `apd-frontend-dev` | `apd-frontend-tester` |
+| Backend tests passed | `apd-backend-tester` | `apd-architect` |
+| Backend bug found | `apd-backend-tester` | `apd-architect` |
+| Frontend tests passed | `apd-frontend-tester` | `apd-architect` |
+| Frontend bug found | `apd-frontend-tester` | `apd-architect` |
+| User test guide ready | `apd-user-tester` | `user` |
+| Input Needed | `[any]` | `user` |
+| No matching trigger condition found | `[any]` | `user` |
+
+**Workspace files** (synced into `agent_framework/` when this example is used):
+- `inbox/templates/message_task.md` — task assignment template (architect → specialist)
+- `inbox/templates/message_report.md` — execution report template
+- `inbox/templates/message_user_test_guide.md` — manual test guide template (user-tester → user)
+- `memory/decisions.md` — log of significant architectural decisions
+- `memory/tech_stack.md` — canonical record of the project's technology choices
+- `memory/project_status.md` — live status board tracking backend modules, frontend modules, and E2E flows
+
+---
+
 ## How the Headhunter Designs a Team
 
 When the Headhunter receives a project briefing, it:
@@ -134,7 +188,6 @@ Defines profiles and the agent roster. Each agent has a `roo` block (Roo mode co
   "profiles": [
     {
       "name": "my-team",
-      "source": "project",
       "files": [
         "rules/team_instructions.md"
       ]
@@ -166,7 +219,7 @@ Defines profiles and the agent roster. Each agent has a `roo` block (Roo mode co
 
 **Rules:**
 - Slugs must be unique across both `internal/agents/agents.json` and `project/agents/agents.json`. A conflict will cause `cycle/main.py` to output `APD_CONFLICT:{slug}` and halt.
-- Profiles are scoped by source. Use `"source": "shared"` to reference shared profiles, `"source": "project"` for profiles defined in the project `agents.json`.
+- Profiles are scoped by the registry that contains the `agents.json` where they are defined — not by a field on the profile itself. The `source` field appears only in agent `apd.profiles` references (e.g., `{ "name": "apd-core", "source": "shared" }`), telling `sync_registry` which registry to look up the profile in.
 - File paths in `profiles[].files` are resolved relative to the `agents.json` that defines them. File paths in `apd.files` are resolved relative to the agent's own `agents.json` directory.
 
 ### Required: `agents/{agent-name}/instructions.md`

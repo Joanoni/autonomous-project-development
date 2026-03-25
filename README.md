@@ -27,7 +27,7 @@ cd autonomous-project-development
 ### 2. Create a new project
 
 ```bash
-python scripts/new_project/main.py
+python tools/new_project/main.py
 ```
 
 Follow the prompts to set a destination folder and project name (or provide a Git SSH URL for a remote project).
@@ -54,12 +54,13 @@ See [`docs/how-to-use.md`](docs/how-to-use.md) for the full step-by-step guide.
 
 ```
 APD Repository
-├── scripts/
+├── tools/
 │   └── new_project/        ← entry point: creates new projects
 └── skeleton/               ← template copied into every project
     ├── agent_framework/
     │   ├── registry/
-    │   │   ├── internal/   ← orchestrator blueprint + cycle script
+    │   │   ├── shared/     ← shared profiles (global + XML + operational rules)
+    │   │   ├── internal/   ← orchestrator blueprint + cycle tool
     │   │   ├── project/    ← headhunter blueprint + operational rules
     │   │   └── examples/   ← example teams for Headhunter reference
     │   ├── inbox/          ← filesystem message bus (draft/unread/read)
@@ -90,6 +91,6 @@ Full documentation is in [`docs/`](docs/):
 |---|---|
 | [`architecture.md`](docs/architecture.md) | System design, runtime environment, rules hierarchy |
 | [`agents.md`](docs/agents.md) | All agents: roles, domains, inputs, outputs, behavioral rules |
-| [`scripts.md`](docs/scripts.md) | All scripts: purpose, inputs, outputs, side effects |
+| [`tools.md`](docs/tools.md) | All tools: purpose, inputs, outputs, side effects |
 | [`teams.md`](docs/teams.md) | Team system, built-in examples, how to create a custom team |
 | [`how-to-use.md`](docs/how-to-use.md) | Step-by-step usage guide |
