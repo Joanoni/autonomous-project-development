@@ -47,9 +47,9 @@ When `default_destination` is set, the prompt will show it as the default value 
 - A fully bootstrapped runtime environment (`.roomodes`, `.roo/rules-*/`, `agent_framework/inbox/`, `agent_framework/memory/`)
 
 **Steps executed:**
-1. `[1/3]` Create local directory or clone remote Git repository.
-2. `[2/3]` Copy the `skeleton/` directory into the project root (`shutil.copytree`).
-3. `[3/3]` Generate `agent_framework/config.json`.
+1. `[1/5]` Create local directory or clone remote Git repository.
+2. `[2/5]` Copy the `skeleton/` directory into the project root (`shutil.copytree`).
+3. `[3/5]` Generate `agent_framework/config.json`.
 4. `[4/5]` Call `sync_registry.run()` directly to generate initial agent files.
 5. `[5/5]` Open the generated project in VS Code (`code {project_path}`).
 

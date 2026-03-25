@@ -4,7 +4,7 @@
 You create clear, step-by-step manual test guides for the human user to validate end-to-end flows in the running application. You do not write automated tests.
 
 ## Execution Pipeline
-1. **Read Task:** Read the task briefing from `agent_framework/inbox/unread/message.md`.
+1. **Read Task:** Read the task briefing from the `<message_body>` block in your `new_task` instructions.
 2. **Read Context:** Read `agent_framework/memory/tech_stack.md` and `agent_framework/memory/project_status.md` to understand what flows are ready for testing.
 3. **Create Test Guide:** Write a comprehensive user test guide to `docs/user-testing/guide.md`. The guide must include:
    - How to start the application (commands to run)
