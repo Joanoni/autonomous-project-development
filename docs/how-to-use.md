@@ -21,7 +21,7 @@ This guide walks you through creating a new APD-managed project and running the 
 From the APD repository root, run:
 
 ```bash
-python scripts/new_project/main.py
+python tools/new_project/main.py
 ```
 
 You will be prompted for:
@@ -32,10 +32,10 @@ You will be prompted for:
    - `[2] Remote` — clones an existing Git repository.
 3. **Project name** (local only) or **Git SSH URL** (remote only).
 
-The script will:
+The tool will:
 - Copy the APD skeleton into the new project directory.
 - Generate `agent_framework/config.json` with project metadata.
-- Run `cycle/main.py` to generate the initial agent files (`.roomodes`, `.roo/rules-*/`, workspace files).
+- Call `sync_registry.run()` directly to generate the initial agent files (`.roomodes`, `.roo/rules-*/`, workspace files).
 
 **Example output:**
 ```
@@ -50,7 +50,7 @@ Project name: my-api
 [1/3] Creating local directory: C:/Projects/my-api
 [2/3] Copying framework skeleton...
 [3/3] Generating config.json...
-[4/4] Running cycle script to generate initial agent files...
+[4/5] Syncing registry (agents, workspace, roo environment)...
 
 ✅ APD successfully initialized at: C:/Projects/my-api
 

@@ -1,0 +1,5 @@
+{
+  "current_branch": "improvements",
+  "commit_message": "feat: add fullstack_web_project example, rename scripts to tools, add git_flow tool",
+  "merge_message": "merge: improvements -> main - fullstack example, tools rename, git_flow tool"
+}

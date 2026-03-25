@@ -1,5 +1,5 @@
 """
-cycle/main.py — APD Cycle Script
+cycle/main.py — APD Cycle Tool
 
 Runs every time the Orchestrator starts its loop. Performs five steps in order:
   1. Merge agents.json from shared/, internal/ and project/ registries.

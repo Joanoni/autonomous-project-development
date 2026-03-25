@@ -1,5 +1,0 @@
-{
-  "current_branch": "improvements",
-  "commit_message": "docs: remove post_work references, fix agent input source (new_task instructions), add shared workspace sync, fix orchestrator constraints",
-  "merge_message": "merge: improvements -> main -- doc updates for post_work removal, new_task input protocol, shared workspace sync, orchestrator constraints"
-}

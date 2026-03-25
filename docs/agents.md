@@ -24,7 +24,7 @@ There are two agent categories:
 | **Roo Group** | `command` |
 | **Domain** | `agent_framework/inbox/draft/` (writes draft messages only) |
 
-**Role:** The infrastructure manager. Its sole purpose is to run the cycle script and delegate execution to the correct agent or pause for human intervention.
+**Role:** The infrastructure manager. Its sole purpose is to run the cycle tool and delegate execution to the correct agent or pause for human intervention.
 
 **Inputs:** Receives an XML message in the standard format — either pasted by the human in chat (first run) or returned by an agent via `attempt_completion` (subsequent runs).
 
@@ -32,7 +32,7 @@ There are two agent categories:
 
 **Execution Loop:**
 1. Write the received XML message verbatim to `agent_framework/inbox/draft/message.md`.
-2. Run `python agent_framework/scripts/internal/cycle/main.py`.
+2. Run `python agent_framework/tools/internal/cycle/main.py`.
 3. If output starts with `APD_CONFLICT:` → pause and notify the human to resolve the agent slug conflict.
 4. If output is `user` → pause and notify the human.
 5. If output is `empty` → report "Queue Empty" and stop.
@@ -43,7 +43,7 @@ There are two agent categories:
 - Writes only `agent_framework/inbox/draft/message.md` — no other file writes.
 - Relies entirely on `cycle/main.py` output for routing decisions.
 - Relies entirely on the received message for content — never modifies or summarizes it.
-- Does not populate any `input.json` — the cycle script reads the filesystem directly.
+- Does not populate any `input.json` — the cycle tool reads the filesystem directly.
 
 ---
 
@@ -118,9 +118,123 @@ There are two agent categories:
 
 ---
 
+### `apd-architect` — Solution Architect *(fullstack_web_project example)*
+
+| Property | Value |
+|---|---|
+| **Slug** | `apd-architect` |
+| **Category** | Project / Coordination |
+| **Roo Group** | `read`, `edit`, `command` |
+| **Domain** | Full project — decomposes work and coordinates all specialist agents |
+
+**Role:** The coordination hub for the fullstack team. Receives the project briefing, breaks it into backend and frontend tasks, assigns them to the appropriate specialists, tracks progress via `agent_framework/memory/project_status.md`, and routes to the user when the project is complete or a decision is needed.
+
+**Inputs:** Receives the project briefing or a specialist report via `new_task` instructions in the standard XML message format.
+
+**Outputs:** Returns task assignments (to specialists) or a final report (to `user`) via `attempt_completion` in the standard XML message format.
+
+> **Note:** This agent is part of the built-in `fullstack_web_project` example. Real projects will have agents defined by the Headhunter with custom slugs and instructions.
+
+---
+
+### `apd-backend-dev` — Senior Backend Engineer *(fullstack_web_project example)*
+
+| Property | Value |
+|---|---|
+| **Slug** | `apd-backend-dev` |
+| **Category** | Project / Development |
+| **Roo Group** | `read`, `edit`, `command` |
+| **Domain** | `src/backend/` |
+
+**Role:** Implements API endpoints, business logic, and database integrations strictly within `src/backend/`. Reports completion to `apd-backend-tester`.
+
+**Inputs:** Receives a task assignment from `apd-architect` via `new_task` instructions in the standard XML message format.
+
+**Outputs:** Returns an execution report via `attempt_completion` addressed to `apd-backend-tester`.
+
+> **Note:** This agent is part of the built-in `fullstack_web_project` example. Real projects will have agents defined by the Headhunter with custom slugs and instructions.
+
+---
+
+### `apd-backend-tester` — Backend QA Engineer *(fullstack_web_project example)*
+
+| Property | Value |
+|---|---|
+| **Slug** | `apd-backend-tester` |
+| **Category** | Project / QA |
+| **Roo Group** | `read`, `edit`, `command` |
+| **Domain** | `tests/backend/` |
+
+**Role:** Writes and runs automated tests for the backend strictly within `tests/backend/`. Reports results (pass or bug found) back to `apd-architect`.
+
+**Inputs:** Receives an execution report from `apd-backend-dev` via `new_task` instructions in the standard XML message format.
+
+**Outputs:** Returns a test report via `attempt_completion` addressed to `apd-architect` (whether tests passed or a bug was found).
+
+> **Note:** This agent is part of the built-in `fullstack_web_project` example. Real projects will have agents defined by the Headhunter with custom slugs and instructions.
+
+---
+
+### `apd-frontend-dev` — Senior Frontend Engineer *(fullstack_web_project example)*
+
+| Property | Value |
+|---|---|
+| **Slug** | `apd-frontend-dev` |
+| **Category** | Project / Development |
+| **Roo Group** | `read`, `edit`, `command` |
+| **Domain** | `src/frontend/` |
+
+**Role:** Implements UI components and API integrations strictly within `src/frontend/`. Reports completion to `apd-frontend-tester`.
+
+**Inputs:** Receives a task assignment from `apd-architect` via `new_task` instructions in the standard XML message format.
+
+**Outputs:** Returns an execution report via `attempt_completion` addressed to `apd-frontend-tester`.
+
+> **Note:** This agent is part of the built-in `fullstack_web_project` example. Real projects will have agents defined by the Headhunter with custom slugs and instructions.
+
+---
+
+### `apd-frontend-tester` — Frontend QA Engineer *(fullstack_web_project example)*
+
+| Property | Value |
+|---|---|
+| **Slug** | `apd-frontend-tester` |
+| **Category** | Project / QA |
+| **Roo Group** | `read`, `edit`, `command` |
+| **Domain** | `tests/frontend/` |
+
+**Role:** Writes and runs automated tests for the frontend strictly within `tests/frontend/`. Reports results (pass or bug found) back to `apd-architect`.
+
+**Inputs:** Receives an execution report from `apd-frontend-dev` via `new_task` instructions in the standard XML message format.
+
+**Outputs:** Returns a test report via `attempt_completion` addressed to `apd-architect` (whether tests passed or a bug was found).
+
+> **Note:** This agent is part of the built-in `fullstack_web_project` example. Real projects will have agents defined by the Headhunter with custom slugs and instructions.
+
+---
+
+### `apd-user-tester` — User Testing Specialist *(fullstack_web_project example)*
+
+| Property | Value |
+|---|---|
+| **Slug** | `apd-user-tester` |
+| **Category** | Project / QA |
+| **Roo Group** | `read`, `edit` |
+| **Domain** | Read and edit only — produces documentation, no code execution |
+
+**Role:** Creates clear, step-by-step manual test guides for the human user to validate end-to-end flows in the running application. Sends the guide directly to `user`.
+
+**Inputs:** Receives a task assignment from `apd-architect` via `new_task` instructions in the standard XML message format.
+
+**Outputs:** Returns a user test guide via `attempt_completion` addressed to `user`, using the `message_user_test_guide.md` template.
+
+> **Note:** This agent is part of the built-in `fullstack_web_project` example. Real projects will have agents defined by the Headhunter with custom slugs and instructions.
+
+---
+
 ## Profiles-Based Rules System
 
-Every agent's effective ruleset is assembled by `cycle/main.py` from the **profiles** declared in its `agents.json` source file. Profiles are scoped by source (`shared`, `internal`, or `project`) and referenced by agents using `{ "name": "...", "source": "..." }` objects.
+Every agent's effective ruleset is assembled by `cycle/main.py` from the **profiles** declared in its `agents.json` source file. Profiles are defined in a registry's `agents.json` and referenced by agents using `{ "name": "...", "source": "..." }` objects, where `source` identifies which registry (`shared`, `internal`, or `project`) defines that profile.
 
 ### Shared registry profiles (`registry/shared/agents/agents.json`)
 
@@ -138,7 +252,7 @@ Team-specific profiles (e.g., `simple-team`) are defined locally in the example 
 Each agent also lists its own specific instruction file under `apd.files`, which is appended after all profile files.
 
 **Resolution order per agent:**
-1. Files from each profile in `apd.profiles` (in order), resolved from the profile's declared source.
+1. Files from each profile in `apd.profiles` (in order), resolved from the registry identified by the `source` field in the profile reference.
 2. Files from `apd.files` (agent-specific instructions), resolved relative to the agent's own `agents.json` directory.
 
 All resolved files are copied into `.roo/rules-{slug}/`.
