@@ -243,7 +243,7 @@ The shared registry defines the two core profiles available to **all agents** re
 | Profile | Files | Applied to |
 |---|---|---|
 | `apd-core` | `rules/global_rules.md`, `rules/xml_rules.md` | All agents (internal + project) |
-| `operational` | `rules/operational_rules.md` | All operational agents |
+| `operational` | `rules/operational_rules.md`, `rules/tools_rules.md` | All operational agents |
 
 The `internal` and `project` registries do **not** define their own `apd-core` or `operational` profiles. They reference the shared ones via `{ "name": "apd-core", "source": "shared" }`.
 
