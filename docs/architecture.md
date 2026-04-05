@@ -124,7 +124,7 @@ There are three `agents.json` sources that are merged on every cycle:
 
 | Source | Path | Contents |
 |---|---|---|
-| **Shared** | `registry/shared/agents/agents.json` | Shared profiles only — no agents. Defines `apd-core` (global + XML rules) and `operational` (operational rules) profiles available to all agents across all sources. |
+| **Shared** | `registry/shared/agents/agents.json` | Shared profiles only — no agents. Defines `apd-core` (global + XML rules) and `operational` (operational + tools rules) profiles available to all agents across all sources. |
 | **Internal** | `registry/internal/agents/agents.json` | Fixed agents (Orchestrator). References shared profiles via `{ "name": "...", "source": "shared" }`. |
 | **Project** | `registry/project/agents/agents.json` | Project agents (Headhunter + operational team). References shared profiles and defines team-specific profiles. |
 

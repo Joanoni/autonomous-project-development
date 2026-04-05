@@ -10,7 +10,8 @@
     {
       "name": "operational",
       "files": [
-        "rules/operational_rules.md"
+        "rules/operational_rules.md",
+        "rules/tools_rules.md"
       ]
     }
   ],

@@ -1,5 +1,5 @@
 {
   "current_branch": "improvements",
-  "commit_message": "fix: update agent instructions to read from new_task and clean up orchestrator domain constraints",
-  "merge_message": "Merge improvements: fix agent input source and orchestrator domain constraints"
+  "commit_message": "docs: update operational profile to include tools_rules.md",
+  "merge_message": "Merge improvements: add tools_rules.md to operational profile and update docs"
 }
